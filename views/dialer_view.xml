@@ -1,0 +1,134 @@
+<openerp> <data>
+    
+    <record id='dialer_view_form' model='ir.ui.view'>
+        <field name='name'>Dialer Form</field>
+        <field name='model'>asterisk.dialer</field>
+        <field name='type'>form</field>
+        <field name='arch' type='xml'>
+            <form string='Dialer' edit='1'>
+                <header>
+                    <button name='start' type='object' string='Start' attrs="{'invisible': [('state','not in', ['draft', 'cancelled'])]}"/>
+                    <button name='pause' type='object' string='Pause' attrs="{'invisible': [('state','!=', 'running')]}"/>
+                    <button name='cancel' type='object' string='Cancel' attrs="{'invisible': [('state','!=', 'running')]}"/>
+                    <button name='resume' type='object' string='Resume' attrs="{'invisible': [('state','!=', 'paused')]}"/>
+                    <field name="state" widget="statusbar"/>    
+                </header>
+                <sheet>
+                    <div class='oe_title'>
+                        <label for='name' string='Name' class='oe_edit_only'/>
+                        <h1>
+                            <field name='name'/>
+                        </h1>
+                    </div>
+                    <separator/>
+                    <div>
+                        <audio id="demo" loop="loop" controls="controls">  
+                            <source src="horse.ogg" />  
+                        </audio>
+                    </div>
+                    <group>
+                        <group>
+                            <field name='dialer_type'/>
+                            <field name='state'/>
+                            <field name='sound_file'/>
+                            <field name='from_time' widget='float_time'/>
+                            <field name='to_time' widget='float_time'/>
+                            <field name='dialer_model'/>
+                            <field name="dialer_domain" widget="char_domain" placeholder="Select subscribers" 
+                                options="{'model_field': 'dialer_model'}"/>
+                        </group>
+                        <group col='1'>
+                            <field colspan='1' name="channels">
+                                <tree edit="false" create="false">
+                                    <field name="name"/>
+                                    <field name="phone"/>
+                                </tree>
+                            </field>
+                        </group>
+                    </group>
+                    <field name='cdrs'>
+                        <tree create='false' edit='false'>
+                            <field name='name'/>
+                            <field name='phone'/>
+                            <field name='status'/>
+                            <field name='duration_str'/>
+                            <field name='playback_duration_str'/>
+                        </tree>
+                    </field>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id='dialer_view_tree' model='ir.ui.view'>
+        <field name='name'>Dialer Tree</field>
+        <field name='model'>asterisk.dialer</field>
+        <field name='type'>tree</field>
+        <field name='arch' type='xml'>
+            <tree string='Dialers'>
+                <field name='name'/>
+                <field name='state'/>
+                <field name='sent' widget='progressbar'/>
+                <field name='answered'/>
+                <field name='busy'/>
+                <field name='congestion'/>
+                <field name='no_answer'/>
+                <field name='failed'/>
+            </tree>
+        </field>
+    </record>
+    
+    <record id='dialer' model='ir.actions.act_window'>
+        <field name='name'>Dialer</field>
+        <field name='view_mode'>tree,form</field>
+        <field name='res_model'>asterisk.dialer</field>
+    </record>
+    
+    <menuitem id='asterisk_topmenu' name='Asterisk'/>
+    <menuitem id='asterisk_dialer' name='Dialer' parent='asterisk_topmenu'/>
+    <menuitem id='asterisk_dialer_dialer' name='Dialer' parent='asterisk_dialer' action='dialer'/>
+    
+    
+    <record id='dialer_subscriber_list_tree' model='ir.ui.view'>
+        <field name='name'>Dialer Subscriber List Tree</field>
+        <field name='model'>asterisk.dialer.subscriber.list</field>
+        <field name='type'>tree</field>
+        <field name='arch' type='xml'>
+            <tree string='Subscriber Lists' editable='top'>
+                <field name='name'/>
+                <field name='subscriber_count' readonly='1'/>
+            </tree>
+        </field>
+    </record>
+
+   <record id='dialer_subscriber_list' model='ir.actions.act_window'>
+        <field name='name'>Dialer Subscriber List</field>
+        <field name='view_mode'>tree,form</field>
+        <field name='res_model'>asterisk.dialer.subscriber.list</field>
+    </record>    
+    <menuitem id='asterisk_dialer_subscriber_list' name='Subscriber List' parent='asterisk_dialer' action='dialer_subscriber_list'/>
+    
+
+
+    <record id='dialer_subscribers_tree' model='ir.ui.view'>
+        <field name='name'>Dialer Subscribers</field>
+        <field name='model'>asterisk.dialer.subscriber</field>
+        <field name='view_type'>tree</field>
+        <field name='arch' type='xml'>
+            <tree string='Subscribers' editable='top'>
+                <field name='name'/>
+                <field name='phone'/>
+                <field name='subscriber_list'/>
+            </tree>
+        </field>
+    </record>
+
+   <record id='dialer_subscribers' model='ir.actions.act_window'>
+        <field name='name'>Dialer Subscribers</field>
+        <field name='view_mode'>tree,form</field>
+        <field name='res_model'>asterisk.dialer.subscriber</field>
+    </record>    
+    <menuitem id='asterisk_dialer_subscribers' name='Subscribers' parent='asterisk_dialer' action='dialer_subscribers'/>
+
+
+</data></openerp>
