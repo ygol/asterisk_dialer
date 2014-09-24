@@ -17,13 +17,15 @@ DIALER_STATE_CHOICES = (
     ('done', _('Done')),
 )
 
-DIALER_TYPE_CHOICES = (    
-    ('ondemand', _('On demand')),
-)
+#DIALER_TYPE_CHOICES = (    
+#    ('ondemand', _('On demand')),
+#)
     
 
 class dialer(models.Model):
     _name = 'asterisk.dialer'
+    _inherit = 'mail.thread'
+    
     
     @api.model  
     def _get_dialer_model(self):
@@ -33,13 +35,22 @@ class dialer(models.Model):
         )
         return dialer_models
         
+        
+    @api.one
+    def _get_cdr_count(self):
+        self.cdr_count = self.env['asterisk.dialer.cdr'].search_count([('dialer','=',self.id)])
+        
     name = fields.Char(required=True, string=_('Name'))
     description = fields.Text(string=_('Description'))
-    dialer_type = fields.Selection(DIALER_TYPE_CHOICES, string=_('Type'))
-    state = fields.Selection(DIALER_STATE_CHOICES, string=_('State'))
+    #dialer_type = fields.Selection(DIALER_TYPE_CHOICES, string=_('Type'))
+    state = fields.Selection(DIALER_STATE_CHOICES, string=_('State'), track_visibility='onchange')
     sound_file = fields.Binary(string=_('Sound file'))
-    from_time = fields.Float(digits=(2, 2), string=_('From time')) 
-    to_time = fields.Float(digits=(2, 2), string=_('To time')) 
+    start_time = fields.Datetime(string=_('Start time'), 
+        help=_('Exact date and time to start dialing. For scheduled dialers.'))
+    from_time = fields.Float(digits=(2, 2), string=_('From time'), 
+        help=_('Time permitted for calling If dialer is paused it will be resumed this time.')) 
+    to_time = fields.Float(digits=(2, 2), string=_('To time'), 
+        help=_('Time perimitted for calling. If dialer is running it will be paused this time')) 
     dialer_model = fields.Selection('_get_dialer_model', required=True, string=_('Dialer model'))
     dialer_domain = fields.Char(string=_('Domain'))
     subscriber_lists = fields.Many2many('asterisk.dialer.subscriber', 'campaign', string=_('Subscribers')) 
@@ -51,13 +62,16 @@ class dialer(models.Model):
     failed = fields.Integer(string=_('Failed'))
     channels = fields.One2many('asterisk.dialer.channel', 'dialer', string=_('Current calls'))
     cdrs = fields.One2many('asterisk.dialer.cdr', 'dialer', string=_('Call Detail Records'))
+    cdr_count = fields.Integer(compute='_get_cdr_count', string=_('Number of call detail records'))
+    simult = fields.Integer(string=_('Simultaneous calls'))
   
     _defaults = {
-        'dialer_type': 'ondemand',
+        #'dialer_type': 'ondemand',
         'dialer_model': 'res.partner',
         'state': 'draft',
         'from_time': 10.00,
         'to_time': 18.00,
+        'simult': 1,
     }
     
     @api.one
@@ -97,15 +111,21 @@ class dialer(models.Model):
             cr = self.pool.cursor()
             dialer = self.pool['asterisk.dialer'].browse(cr, uid, ids, context=context)[0]
             domain = [('phone', '!=', None)] + [eval(dialer.dialer_domain)[0]]
-            contact_ids = self.pool[dialer.dialer_model].search(cr, uid, domain, context=context)
-            contacts = self.pool[dialer.dialer_model].browse(cr, uid, contact_ids, context=context)
+            
             client = ari.connect('http://localhost:8088', 'dialer', 'test')
+            
             dialer_channel_obj = self.pool['asterisk.dialer.channel']
-            cdr_obj = self.pool['asterisk.dialer.cdr']
+            cdr_obj = self.pool['asterisk.dialer.cdr']            
+            
             cr.commit()
             
-            # TODO: Limit simultaneous load
-            for contact in contacts:
+            # Get possible call load based on simult restriction
+            channel_count = dialer_channel_obj.search_count(cr, uid, [('dialer', '=', dialer.id)], context=context)
+            print 'CURRENT', channel_count
+            contact_ids = self.pool[dialer.dialer_model].search(cr, uid, domain, context=context)
+            contacts = self.pool[dialer.dialer_model].browse(cr, uid, contact_ids, context=context)
+            call_limit = dialer.simult - channel_count
+            for contact in contacts[:]:
                 # Generate channel ids
                 chan_id = uuid.uuid1()
                 channelId = '%s-1' % chan_id
@@ -129,7 +149,7 @@ class dialer(models.Model):
                     },
                     context=context)
                 cr.commit()
-                
+
                 # Create cdr
                 cdr_obj.create(cr, uid, {
                     'dialer': dialer.id,
@@ -172,11 +192,14 @@ class dialer(models.Model):
                     cdr = cdr_obj.browse(cr, uid, cdr_id, context=context)
                     cdr.playback_end_time = datetime.datetime.now()
                     cr.commit()
+                # Hangup now!
+                client.channels.get(channelId=channel_id).hangup()
             
                
             def stasis_start(channel, ev):
                 channel.answer()
-                channel.play(media='sound:demo-thanks')
+                play_file = 'demo-thanks'
+                channel.play(media='sound:%s' % play_file)
                 # Update cdr                
                 cdr_id = cdr_obj.search(cr, uid, [('channel_id','=','%s' % channel.json.get('id'))],
                     context=context)
@@ -261,11 +284,11 @@ class cdr(models.Model):
     dialer = fields.Many2one('asterisk.dialer', ondelete='cascade', string=_('Dialer'))
     channel_id = fields.Char(select=1)
     other_channel_id = fields.Char(select=1)
-    name = fields.Char()
-    phone = fields.Char()
-    status = fields.Selection(CDR_CHOICES,  string=_('Status'))
-    start_time = fields.Datetime(string=_('Started'))
-    end_time = fields.Datetime(string=_('Ended'))
+    name = fields.Char(string=_('Name'), select=1)
+    phone = fields.Char(string=_('Phone'), select=1)
+    status = fields.Selection(CDR_CHOICES, select=1, string=_('Status'))
+    start_time = fields.Datetime(string=_('Started'), select=1)
+    end_time = fields.Datetime(string=_('Ended'), select=1)
     #duration = fields.Integer(compute='_get_duration', string=_('Duration'))
     duration_str = fields.Char(compute='_get_duration_str', string=_('Call duration'))
     playback_start_time = fields.Datetime(string=_('Playback started'))

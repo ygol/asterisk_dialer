@@ -7,13 +7,19 @@
         <field name='arch' type='xml'>
             <form string='Dialer' edit='1'>
                 <header>
-                    <button name='start' type='object' string='Start' attrs="{'invisible': [('state','not in', ['draft', 'cancelled'])]}"/>
-                    <button name='pause' type='object' string='Pause' attrs="{'invisible': [('state','!=', 'running')]}"/>
+                    <button class='oe_highlight' name='start' type='object' string='Start' attrs="{'invisible': [('state','not in', ['draft', 'cancelled'])]}"/>
+                    <button class='oe_highlight' name='pause' type='object' string='Pause' attrs="{'invisible': [('state','!=', 'running')]}"/>
                     <button name='cancel' type='object' string='Cancel' attrs="{'invisible': [('state','!=', 'running')]}"/>
-                    <button name='resume' type='object' string='Resume' attrs="{'invisible': [('state','!=', 'paused')]}"/>
+                    <button class='oe_highlight' name='resume' type='object' string='Resume' attrs="{'invisible': [('state','!=', 'paused')]}"/>
                     <field name="state" widget="statusbar"/>    
                 </header>
                 <sheet>
+                    <div class='oe_button_box oe_right'>
+                        <button class="oe_inline oe_stat_button" type="action" name="%(dialer_cdr)d" icon="fa-phone" 
+                                context="{'search_default_dialer_id': active_id}">
+                            <field string="Call Statistics" name="cdr_count" widget="statinfo"/>
+                        </button>
+                    </div>
                     <div class='oe_title'>
                         <label for='name' string='Name' class='oe_edit_only'/>
                         <h1>
@@ -28,33 +34,29 @@
                     </div>
                     <group>
                         <group>
-                            <field name='dialer_type'/>
-                            <field name='state'/>
                             <field name='sound_file'/>
-                            <field name='from_time' widget='float_time'/>
-                            <field name='to_time' widget='float_time'/>
                             <field name='dialer_model'/>
                             <field name="dialer_domain" widget="char_domain" placeholder="Select subscribers" 
                                 options="{'model_field': 'dialer_model'}"/>
+                            <field name='simult'/>
                         </group>
-                        <group col='1'>
-                            <field colspan='1' name="channels">
-                                <tree edit="false" create="false">
+                        <group string='Time constraints'>
+                            <field name='from_time' widget='float_time'/>
+                            <field name='to_time' widget='float_time'/>
+                        </group>
+                    </group>
+                    <group string='Current calls'>
+                            <field name="channels" nolabel='1'>
+                                <tree edit="false" create="false" delete='false'>
                                     <field name="name"/>
                                     <field name="phone"/>
                                 </tree>
                             </field>
-                        </group>
                     </group>
-                    <field name='cdrs'>
-                        <tree create='false' edit='false'>
-                            <field name='name'/>
-                            <field name='phone'/>
-                            <field name='status'/>
-                            <field name='duration_str'/>
-                            <field name='playback_duration_str'/>
-                        </tree>
-                    </field>
+                    <div class='oe_chatter'>
+                        <field name='message_follower_ids' widget='mail_followers'/>
+                        <field name='message_ids' widget='mail_thread'/>
+                    </div>
                 </sheet>
             </form>
         </field>
@@ -113,7 +115,7 @@
     <record id='dialer_subscribers_tree' model='ir.ui.view'>
         <field name='name'>Dialer Subscribers</field>
         <field name='model'>asterisk.dialer.subscriber</field>
-        <field name='view_type'>tree</field>
+        <field name='type'>tree</field>
         <field name='arch' type='xml'>
             <tree string='Subscribers' editable='top'>
                 <field name='name'/>
@@ -129,6 +131,58 @@
         <field name='res_model'>asterisk.dialer.subscriber</field>
     </record>    
     <menuitem id='asterisk_dialer_subscribers' name='Subscribers' parent='asterisk_dialer' action='dialer_subscribers'/>
+
+
+
+
+    <record id='dialer_stats_tree' model='ir.ui.view'>
+        <field name='name'>Dialer Stats</field>
+        <field name='model'>asterisk.dialer.cdr</field>
+        <field name='type'>tree</field>
+        <field name='arch' type='xml'>
+            <tree string='Statistics'>
+                <field name='name'/>
+                <field name='phone'/>
+                <field name='status'/>
+                <field name='start_time'/>
+                <field name='end_time'/>
+                <field name='duration_str'/>
+            </tree>
+        </field>
+    </record>
+    
+    <record id='dialer_stats_search' model='ir.ui.view'>
+        <field name='name'>Dialer Stats Search</field>
+        <field name='model'>asterisk.dialer.cdr</field>
+        <field name='type'>search</field>
+        <field name='arch' type='xml'>
+            <search string='Search Stats'>
+                <group string='Date'>
+                    <filter icon="terp-project" string='Today' 
+                        domain="[('start_time','&gte;',time.strftime('%Y-%m-%d 00:00:00')),('start_time','&lte;',time.strftime('%Y-%m-%d 23:59:59'))]"/>
+                </group>
+                <group string='Status'>
+                    <filter string='Answered' domain="[('status','=','ANSWER')]"/>
+                    <filter string='Busy' domain="[('status','=','BUSY')]"/>
+                    <filter string='Congestion' domain="[('status','=','CONGESTION')]"/>
+                    <filter string='No answer' domain="[('status','=','NOANSWER')]"/>
+                    <filter string='Channel unavailable' domain="[('status','=','CHANUNAVAIL')]"/>
+                    <filter string='Cancel' domain="[('status','=','CANCEL')]"/>
+                </group>
+                <group string='Group by'>
+                    <filter string='Dialer' context="{'group_by': 'dialer'}"/>
+                    <filter string='Status' context="{'group_by': 'status'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+   <record id='dialer_cdr' model='ir.actions.act_window'>
+        <field name='name'>Dialer Stats</field>
+        <field name='view_mode'>tree,form</field>
+        <field name='res_model'>asterisk.dialer.cdr</field>
+    </record>    
+    <menuitem id='asterisk_dialer_cdr' name='Stats' parent='asterisk_dialer' action='dialer_cdr'/>
 
 
 </data></openerp>
