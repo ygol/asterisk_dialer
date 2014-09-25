@@ -1,6 +1,7 @@
 from openerp import http
 from openerp.http import request
 from openerp import SUPERUSER_ID
+from datetime import datetime
 
 
 class dialer(http.Controller):
@@ -22,13 +23,13 @@ class dialer(http.Controller):
             dialer_channel_obj.unlink(request.cr, SUPERUSER_ID, dialer_channel_id, 
                 context=request.context)
                 
-        # Create cdr
+        # Update cdr
         cdr_id = cdr_obj.search(request.cr, SUPERUSER_ID,
                 [('other_channel_id','=','%s' % channel_id)],
                 context=request.context)
         if cdr_id:
             cdr = cdr_obj.browse(request.cr, SUPERUSER_ID, cdr_id, context=request.context)
-            cdr.status = '%s' % status
+            cdr.write({'status': '%s' % status, 'end_time': datetime.now()})
             request.cr.commit()
             return 'OK'
         else:

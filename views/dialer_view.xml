@@ -1,4 +1,11 @@
+<?xml version='1.0' encoding='utf-8'?>
 <openerp> <data>
+    
+   <record id='dialer_cdr' model='ir.actions.act_window'>
+        <field name='name'>Dialer Stats</field>
+        <field name='view_mode'>tree,form</field>
+        <field name='res_model'>asterisk.dialer.cdr</field>
+    </record>    
     
     <record id='dialer_view_form' model='ir.ui.view'>
         <field name='name'>Dialer Form</field>
@@ -7,12 +14,24 @@
         <field name='arch' type='xml'>
             <form string='Dialer' edit='1'>
                 <header>
-                    <button class='oe_highlight' name='start' type='object' string='Start' attrs="{'invisible': [('state','not in', ['draft', 'cancelled'])]}"/>
-                    <button class='oe_highlight' name='pause' type='object' string='Pause' attrs="{'invisible': [('state','!=', 'running')]}"/>
-                    <button name='cancel' type='object' string='Cancel' attrs="{'invisible': [('state','!=', 'running')]}"/>
+                    <field name='active_session' invisible='1'/>
+                    <field name='pause_request' invisible='1' string='Pause'/>
+                    <field name='cancel_request' invisible='1' string='Cancel'/>
+                    <field name="state" invisible='1'/>    
+                    <button class='oe_highlight' name='start' type='object' string='Start' attrs="{'invisible': [('state','!=','ready')]}"/>
+                    <button class='oe_highlight' name='pause' type='object' string='Pause' 
+                        attrs="{'invisible': ['|','|',('cancel_request','=',True),('pause_request','=',True),('state','!=','running')]}"/>
+                    <button name='cancel' type='object' string='Cancel' 
+                        attrs="{'invisible': ['|','|',('pause_request','=',True),('cancel_request','=',True),('state','!=', 'running')]}"/>
+                    <button name='reset' type='object' string='Reset'/>
                     <button class='oe_highlight' name='resume' type='object' string='Resume' attrs="{'invisible': [('state','!=', 'paused')]}"/>
-                    <field name="state" widget="statusbar"/>    
-                </header>
+                    <div class='oe_form_box_info oe_center' attrs="{'invisible': [('cancel_request','!=',True)]}">
+                        <p><strong>Cancelling in  progress. Please wait for current session to terminate...</strong></p>
+                    </div>
+                    <div class='oe_form_box_info oe_center' attrs="{'invisible': [('pause_request','!=',True)]}">
+                        <p><strong>Pause in  progress. Please wait for current session to terminate...</strong></p>
+                    </div>                    
+                </header>                
                 <sheet>
                     <div class='oe_button_box oe_right'>
                         <button class="oe_inline oe_stat_button" type="action" name="%(dialer_cdr)d" icon="fa-phone" 
@@ -47,16 +66,33 @@
                     </group>
                     <group string='Current calls'>
                             <field name="channels" nolabel='1'>
-                                <tree edit="false" create="false" delete='false'>
+                                <tree edit="false" create="false" delete='true'>
                                     <field name="name"/>
                                     <field name="phone"/>
                                 </tree>
                             </field>
                     </group>
+                    <group string='Sessions'>
+                            <field name="sessions" nolabel='1'>
+                                <tree edit="true" create="false" delete='true'>
+                                    <field name='state'/>
+                                    <field name='progress' widget='progressbar'/>
+                                    <field name='total'/>
+                                    <field name='sent'/>
+                                    <field name='answered'/>
+                                    <field name='busy'/>
+                                    <field name='congestion'/>
+                                    <field name='no_answer'/>
+                                    <field name='failed'/>
+                                </tree>
+                            </field>
+                    </group>
+                    
                     <div class='oe_chatter'>
                         <field name='message_follower_ids' widget='mail_followers'/>
                         <field name='message_ids' widget='mail_thread'/>
                     </div>
+                    
                 </sheet>
             </form>
         </field>
@@ -70,12 +106,6 @@
             <tree string='Dialers'>
                 <field name='name'/>
                 <field name='state'/>
-                <field name='sent' widget='progressbar'/>
-                <field name='answered'/>
-                <field name='busy'/>
-                <field name='congestion'/>
-                <field name='no_answer'/>
-                <field name='failed'/>
             </tree>
         </field>
     </record>
@@ -84,13 +114,47 @@
         <field name='name'>Dialer</field>
         <field name='view_mode'>tree,form</field>
         <field name='res_model'>asterisk.dialer</field>
+        <field name='context'>{'mail_create_nolog': '1'}</field>
     </record>
     
-    <menuitem id='asterisk_topmenu' name='Asterisk'/>
-    <menuitem id='asterisk_dialer' name='Dialer' parent='asterisk_topmenu'/>
-    <menuitem id='asterisk_dialer_dialer' name='Dialer' parent='asterisk_dialer' action='dialer'/>
     
+    <record id='session_view_tree' model='ir.ui.view'>
+        <field name='name'>Session Tree</field>
+        <field name='model'>asterisk.dialer.session</field>
+        <field name='type'>form</field>
+        <field name='arch' type='xml'>
+            <form string='Sessions'>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name='state'/>
+                            <field name='progress' widget='progressbar'/>
+                            <field name='total'/>
+                            <field name='sent'/>
+                            <field name='answered'/>
+                        </group>
+                        <group>
+                            <field name='busy'/>
+                            <field name='congestion'/>
+                            <field name='no_answer'/>
+                            <field name='failed'/>
+                            <field name='cancel_request'/>
+                            <field name='pause_request'/>
+                        </group>
+                    </group>
+                    <field name='queue'>
+                        <tree create='false' delete='false' edit='false' nolabel='1'>
+                            <field name='phone'/>
+                            <field name='name'/>
+                            <field name='state'/>
+                        </tree>
+                    </field>
+                </sheet>
+            </form>
+        </field>
+    </record>
     
+    <!--
     <record id='dialer_subscriber_list_tree' model='ir.ui.view'>
         <field name='name'>Dialer Subscriber List Tree</field>
         <field name='model'>asterisk.dialer.subscriber.list</field>
@@ -132,7 +196,7 @@
     </record>    
     <menuitem id='asterisk_dialer_subscribers' name='Subscribers' parent='asterisk_dialer' action='dialer_subscribers'/>
 
-
+  -->
 
 
     <record id='dialer_stats_tree' model='ir.ui.view'>
@@ -159,7 +223,7 @@
             <search string='Search Stats'>
                 <group string='Date'>
                     <filter icon="terp-project" string='Today' 
-                        domain="[('start_time','&gte;',time.strftime('%Y-%m-%d 00:00:00')),('start_time','&lte;',time.strftime('%Y-%m-%d 23:59:59'))]"/>
+                        domain="[('start_time','&gt;=',time.strftime('%Y-%m-%d 00:00:00')),('start_time','&lt;=',time.strftime('%Y-%m-%d 23:59:59'))]"/>
                 </group>
                 <group string='Status'>
                     <filter string='Answered' domain="[('status','=','ANSWER')]"/>
@@ -177,12 +241,9 @@
         </field>
     </record>
 
-   <record id='dialer_cdr' model='ir.actions.act_window'>
-        <field name='name'>Dialer Stats</field>
-        <field name='view_mode'>tree,form</field>
-        <field name='res_model'>asterisk.dialer.cdr</field>
-    </record>    
+    <menuitem id='asterisk_topmenu' name='Asterisk'/>
+    <menuitem id='asterisk_dialer' name='Dialer' parent='asterisk_topmenu'/>
+    <menuitem id='asterisk_dialer_dialer' name='Dialer' parent='asterisk_dialer' action='dialer'/>
     <menuitem id='asterisk_dialer_cdr' name='Stats' parent='asterisk_dialer' action='dialer_cdr'/>
-
 
 </data></openerp>
