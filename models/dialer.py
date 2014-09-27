@@ -2,14 +2,24 @@ import ari
 import datetime
 import time
 import threading
+import sys, traceback
 import uuid
 from openerp import fields, models, api, sql_db, _
-from openerp.osv.osv import except_osv
+from openerp.exceptions import ValidationError, DeferredException
+from requests.exceptions import HTTPError
 
 
-#DIALER_TYPE_CHOICES = (    
-#    ('ondemand', _('On demand')),
-#)
+DIALER_RUN_SLEEP = 5 # Dialer threads sleeps
+
+"""
+ari.connect(get_ari_connection_string())
+ari.connect('http://localhost:8088', 'dialer', 'test')
+"""
+
+DIALER_TYPE_CHOICES = (    
+    ('playback', _('Playback message')),
+    ('dialplan', _('Asterisk dialplan')),
+)
     
 
 class dialer(models.Model):
@@ -54,7 +64,8 @@ class dialer(models.Model):
 
     name = fields.Char(required=True, string=_('Name'))
     description = fields.Text(string=_('Description'))
-    #dialer_type = fields.Selection(DIALER_TYPE_CHOICES, string=_('Type'))
+    dialer_type = fields.Selection(DIALER_TYPE_CHOICES, string=_('Type'))
+    context_name = fields.Char(string=_('Context name'))
     state = fields.Char(compute='_get_state', string=_('State'), track_visibility='onchange')
     active_session = fields.Many2one('asterisk.dialer.session', compute='_get_active_session')
     sessions = fields.One2many('asterisk.dialer.session', 'dialer')
@@ -76,7 +87,7 @@ class dialer(models.Model):
     pause_request = fields.Boolean(related='active_session.pause_request')
   
     _defaults = {
-        #'dialer_type': 'ondemand',
+        'dialer_type': 'playback',
         'dialer_model': 'res.partner',
         'state': 'draft',
         'from_time': 10.00,
@@ -86,34 +97,42 @@ class dialer(models.Model):
     
     @api.one
     def start(self):
-        
+        self.env.cr.commit()
         if not self.dialer_domain:
-            raise except_osv(_('Warning'), _('You have nobody to dial. Add contacts first :-)'))
+            raise ValidationError(_('You have nobody to dial. Add contacts first :-)'))
         
+        server = self.env['asterisk.server.settings'].browse([1])
+        dialer_context = server.context_name
+        # Get rid of unicode as ari-py does not handle it.
+        ari_user = str(server.ari_user)
+        ari_pass = str(server.ari_pass)
+        ari_url = str(server.ari_url)
         
-        if not self.active_session:
+        # Get active session
+        session = self.sessions.search([
+                                ('state', 'in', ['running', 'paused'])],
+                                order='create_date desc', limit=1)
+                                
+        if not session:
             domain = [('phone', '!=', None)] + [eval(self.dialer_domain)[0]]
             contacts = self.env[self.dialer_model].search(domain)
             session = self.env['asterisk.dialer.session'].create({
                 'dialer': self.id,
                 'total': len(contacts),
             })
-            print 'CREATED SESSION', session
+            
             for contact in contacts:
                 queue = self.env['asterisk.dialer.queue'].create({
                     'session': session.id,
                     'phone': contact.phone,
                     'name': contact.name,
                 })
-        else:            
-            session = self.active_session
-            print 'REUSING SESSION', session
-        
+        self.env.cr.commit()
         
         stasis_app_ready = threading.Event()
         go_next_call = threading.Event()
-        stasis_eneded = threading.Event()
-        last_call = threading.Event()
+        
+        
         
         def run_stasis_app():
             
@@ -121,41 +140,17 @@ class dialer(models.Model):
                 pass
                 
                 
-            def call_not_connected():
-                pass
-                
-                
             def application_replaced(app):
                 pass
-                
-                
+
+
             def user_event(channel, ev):
-                if ev['eventname'] == 'go_next_call':
-                    print 'PUSHING FOR NEXT CALL'
-                    go_next_call.set()
-                    
-                elif ev['eventname'] == 'exit_request':
+                if ev['eventname'] == 'exit_request':
                     client.close()
                     
             
             def hangup_request(channel, ev):
-                # Update current calls                
-                dialer_channel = self.env['asterisk.dialer.channel'].search(
-                                    [('channel_id', '=', channel.json.get('id'))])
-                if dialer_channel:
-                    dialer_channel.unlink()
-                    self.env.cr.commit() 
-                # Update cdr                
-                cdr = self.env['asterisk.dialer.cdr'].search([('channel_id','=','%s' % channel.json.get('id'))])
-                if cdr:
-                    cdr.write({'status': 'ANSWER', 'end_time': datetime.datetime.now()})
-                    self.env.cr.commit()
-                if last_call.is_set():
-                    # This is the last call, exit.
-                    print 'WOW, LAST CALL. CLOSING.'
-                    client.close()
-                # Awake to go next call
-                go_next_call.set()
+                pass
                 
             new_cr = sql_db.db_connect(self.env.cr.dbname).cursor()
             uid, context = self.env.uid, self.env.context
@@ -163,29 +158,37 @@ class dialer(models.Model):
                 self.env = api.Environment(new_cr, uid, context)
 
                 try:
-                    client = ari.connect('http://localhost:8088', 'dialer', 'test')
+                    client = ari.connect(ari_url, ari_user, ari_pass)
                     client.on_channel_event('StasisStart', stasis_start)
                     client.on_event('ApplicationReplaced', application_replaced)
                     client.on_channel_event('ChannelUserevent', user_event)
                     client.on_channel_event('ChannelHangupRequest', hangup_request)
                     stasis_app_ready.set()
-                    client.run(apps='odoo-dialer-%s' % self.id)
+                    client.run(apps='dialer-%s-session-%s' % (self.id, session.id))
                 except Exception, e:
-                    # on client.close()
-                    if e.args[0] == 104: 
+                    # on client.close() we are always here :-) So just ignore it.
+                    if hasattr(e, 'args') and type(e.args) in (list, tuple) and e.args[0] == 104: 
                         pass
                     else:
-                        print 'Exception', e
+                        exc_type, exc_value, exc_traceback = sys.exc_info()
+                        e_txt = '<br/>'.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
+                        # Had to use old api new api compains here about closed cursor :-(
+                        dialer_obj = self.pool.get('asterisk.dialer')
+                        dialer = dialer_obj.browse(new_cr, self.env.uid, [self.id]).message_post('Error:\n%s' % e_txt)
+                        new_cr.commit()
+                        print e_txt
                         try:
                             client.close()
                         except:
                             pass
-                    # Terminate thread run and let run dialer know about it.
-                    stasis_eneded.set()
-                    return
+
                 
                 finally:
-                    self.env.cr.close()
+                    print 'STASIS APP FINALLY'
+                    # If an error happens in Stasis app thread 
+                    # let Dialer run thread about it so that it could exit
+                    new_cr.commit()
+                    new_cr.close()
  
             
             
@@ -197,170 +200,37 @@ class dialer(models.Model):
                 channelId = '%s-1' % chan_id
                 otherChannelId = '%s-2' % chan_id
             
-                # ARI originate
-                client = ari.connect('http://localhost:8088', 'dialer', 'test')
-                ari_channel = client.channels.originate(
-                    endpoint='Local/%s@dialer' % contact.phone,
-                    app='odoo-dialer-%s' % self.id,
-                    channelId=channelId,
-                    otherChannelId=otherChannelId)
+                if self.dialer_type == 'playback':
+                    ari_channel = ari_client.channels.originate(
+                        endpoint='Local/%s@dialer' % (contact.phone),
+                        app='dialer-%s-session-%s' % (self.id, session.id),                        
+                        channelId=channelId,
+                        otherChannelId=otherChannelId)
+                else:
+                    ari_channel = ari_client.channels.originate(
+                        endpoint='Local/%s@dialer' % (contact.phone),                        
+                        context='%s' % self.context_name, extension='%s' % contact.phone, priority='1',
+                        channelId=channelId,
+                        otherChannelId=otherChannelId)
                 
                 # +1 current call
                 channel = self.env['asterisk.dialer.channel'].create({
                     'dialer': self.id,
+                    'session': session.id,
                     'channel_id': channelId,
                     'other_channel_id': otherChannelId,
                     'phone': contact.phone,
+                    'start_time': datetime.datetime.now(),
                     'name': contact.name})
                 self.env.cr.commit()
-                    
-            
-            uid, context = self.env.uid, self.env.context
-            new_cr = sql_db.db_connect(self.env.cr.dbname).cursor()  
-            with api.Environment.manage():                                  
-                self.env = api.Environment(new_cr, uid, context)
-                stasis_app_ready.wait(5)
-                if not stasis_app_ready.is_set():
-                    # Could not connect to ARI
-                    raise Exception('Cannot connect to ARI')
-                print 'DIALER THREAD STARTED', time.time()
                 
-                # Initial originate should not block
-                go_next_call.set()
+                # +1 sent call
+                session.sent = session.sent + 1
+                self.env.cr.commit()
                 
-                while True:
-                    go_next_call.wait(3)
-                    go_next_call.clear()
-                    
-                    #self.invalidate_cache()
-                    #self.active_session.invalidate_cache()                    
-                    self.env.invalidate_all()
-                    print 'CHECK CANCEL REQ', self.cancel_request
-                    print 'CHECK PAUSE REQ', self.pause_request
-                    
-                    stop_run = False
-                    if stasis_eneded.is_set():
-                        self.session.sate = 'done'
-                    elif  self.cancel_request:
-                        self.active_session.state = 'cancelled'
-                        self.active_session.cancel_request = False
-                        stop_run = True
-                    elif self.pause_request:
-                        self.active_session.state = 'paused'
-                        self.active_session.pause_request = False
-                        stop_run = True
-                    if stop_run:
-                        self.env.cr.commit()
-                        print 'STOP RUN'
-                        return
-                        
-                    
-                    # Go next round    
-                    session_queue = self.active_session.queue.search([
-                            ('state','=','queued'),
-                            ('session', '=', self.active_session.id),
-                        ], 
-                        limit=self.simult)
-                    
-                    if not session_queue:
-                        # All done
-                        self.active_session.state = 'done'
-                        self.env.cr.commit()
-                        last_call.set()
-                        print 'ALL DONE, DIALER RUN EXIT.'
-                        return
-                        
-                    # Check if we can add more calls
-                    self.env.cr.commit()
-                    #channels = self.env['asterisk.dialer.channel'].search([('dialer','=',self.id)])
-                    print 'CURRENT CHANNELS', len(self.channels)
-                    if len(self.channels) >= self.simult:
-                        print 'NO AVAILABLE CHANNELS, TRY NEXT TIME'
-                        continue
-            
-                    for contact in session_queue:
-                        print 'MAKEING CONTACT STATE'
-                        contact.state = 'process'
-                        self.env.cr.commit()
-                        new_cr.commit()
-                        print 'CONTACT STATE', contact, contact.state
-                        originate_call(contact)
-                                        
-                    print 'GOING NEXT ROUND'
-                
-                # TODO: put it in finally
-                self.env.cr.close()
-                
-        
-        stasis_app = threading.Thread(target=run_stasis_app, name='Stasis app thread')
-        stasis_app.start()
-        dialer_worker = threading.Thread(target=run_dialer, name='Run dialer thread')
-        dialer_worker.start()   
-        return {'type': 'ir.actions.act_window_close'}
- 
-        
-    @api.one
-    def reset(self):
-        if self.active_session:
-            self.active_session.state = 'cancelled'
-        
-    @api.one
-    def cancel(self):
-        self.active_session.cancel_request = True
-            
-        #client = ari.connect('http://localhost:8088', 'dialer', 'test')
-        #try:
-        #    client.events.userEvent(eventName='cancel_request', application='odoo-dialer-%s' % self.id)
-        #except Exception, e:
-        #    if e.args[0] == '404 Client Error: Not Found':
-        #        pass
-        #    else:
-        #        raise
-
-    @api.one
-    def pause(self):
-        self.active_session.pause_request = True
-
-
-    @api.one
-    def resume(self):
-        if self.active_session and self.active_session.state == 'paused':
-            self.active_session.state = 'running'
-        self.start()
-    
-        
-    @api.model
-    def run_dialer(self):
-        context = self.env.context
-        uid = self.env.uid
-        cr = sql_db.db_connect(self.env.cr.dbname).cursor()
-        with api.Environment.manage():
-            self.env = env = api.Environment(cr, uid, context)
-            dialer = self
-            cr.commit()
-            
-            cr.commit()            
-           
-            # Get possible call load based on simult restriction
-            channel_count = env['asterisk.dialer.channel'].search_count([('dialer', '=', dialer.id)])
-            cr.commit()
-            
-            cr.commit()
-            call_limit = dialer.simult - channel_count
-            for contact in contacts:
-                # Check cancel request:
-                if dialer.cancel_request:
-                    pass
-                print 'DOING CONTACT', contact
-                # Generate channel ids
-                
-                
-                print 'CREATED CHANNEL', channel
-                env.cr.commit()
-
-                # Create cdr
-                cdr = env['asterisk.dialer.cdr'].create({
-                    'dialer': dialer.id,
+                # Create CDR
+                cdr = self.env['asterisk.dialer.cdr'].create({
+                    'dialer': self.id,
                     'channel_id': channelId,
                     'other_channel_id': otherChannelId,
                     'phone': contact.phone,
@@ -368,101 +238,164 @@ class dialer(models.Model):
                     'status': 'PROGRESS',
                     'start_time': datetime.datetime.now(),
                     })
-                print 'CREATED CDR', cdr
-                env.cr.commit()
-            
-            print 'SETTING DONE'
-            dialer.state = 'done'
-            print 'STATE', dialer['state']
-            env.cr.commit()
-            env.cr.close()
-            client.events.userEvent(eventName='exit_request', application='odoo-dialer-%s' % self.id)
-            print 'SENT exit_request to Stasis app'
+                self.env.cr.commit()
 
-
-    @api.model
-    def run_stasis_app(self):
-        context = self.env.context
-        uid = self.env.uid
-        cr = sql_db.db_connect(self.env.cr.dbname).cursor()
-        exit_request = False
-        with api.Environment.manage():
-            self.env = env = api.Environment(cr, uid, context)
-            
-            def playback_started(playback, ev):
-                # Update playback start time
-                channel_id = ev['playback']['target_uri'].split(':')[1]
-                cdr = env['asterisk.dialer.cdr'].search([('channel_id','=','%s' % channel_id)])
-                cr.commit()
-                if cdr:
-                    cdr.write({'playback_start_time': datetime.datetime.now()})
-                    cr.commit()
-
-            def playback_finished(playback, ev):
-                # Update playback_end_time
-                channel_id = ev['playback']['target_uri'].split(':')[1]
-                cdr = env['asterisk.dialer.cdr'].search([('channel_id','=','%s' % channel_id)])
-                cr.commit()
-                if cdr:
-                    cdr.playback_end_time = datetime.datetime.now()
-                    cr.commit()
-                # Hangup now!
-                client.channels.get(channelId=channel_id).hangup()
-            
-               
-            def stasis_start(channel, ev):
-                channel.answer()
-                play_file = 'demo-thanks'
-                channel.play(media='sound:%s' % play_file)
+            uid, context = self.env.uid, self.env.context
+            new_cr = sql_db.db_connect(self.env.cr.dbname).cursor()  
+            with api.Environment.manage():                                  
+                self.env = api.Environment(new_cr, uid, context)
+                ari_client = None
+                # Re-open session object with new_cr
+                session = self.sessions.search([
+                                ('state', 'in', ['running', 'paused'])],
+                                order='create_date desc', limit=1)
                 
-
-            def stasis_end(channel, ev):
-                print "%s has left the application" % channel.json.get('name')
-                # Update current calls                
-                dialer_channel = env['asterisk.dialer.channel'].search(
-                                    [('channel_id', '=', channel.json.get('id'))])
-                cr.commit()
-                if dialer_channel:
-                    print 'Removing channel', dialer_channel['channel_id']
-                    dialer_channel.unlink()
-                    cr.commit() 
-                # Update cdr                
-                cdr = env['asterisk.dialer.cdr'].search([('channel_id','=','%s' % channel.json.get('id'))])
-                cr.commit()
-                if cdr:
-                    cdr.write({'status': 'ANSWER', 'end_time': datetime.datetime.now()})
-                    cr.commit()
-                if exit_request:
-                    # This is the last call, exit.
-                    client.close()
-                    cr.close()
+                try:
+                    ari_client = ari.connect(ari_url, ari_user, ari_pass)
+                    if self.dialer_type == 'playback':
+                        stasis_app_ready.wait(5)                        
+                        if not stasis_app_ready.is_set():
+                            # Stasis app was not initialized
+                            self.env['asterisk.dialer'].browse([self.id]).message_post(
+                                'Cannot connect to %s with %s:%s' % (ari_url, ari_user, ari_pass))
+                            self.env.cr.commit()
+                            session.state = 'cancelled'
+                            self.env.cr.commit()
+                            return
+                
+                    # Initial originate should not block
+                    go_next_call.set()
+                
+                    while True:
+                        # Sleep 
+                        go_next_call.wait(DIALER_RUN_SLEEP)
+                        go_next_call.clear()
+                        # avoid TransactionRollbackError            
+                        self.env.cr.commit()
+                        # Clear cash on every round as data could be updated from controller
+                        self.env.invalidate_all()
                     
+                        stop_run = False
+                        
+                        if  self.cancel_request:
+                            session.state = 'cancelled'
+                            session.cancel_request = False
+                            stop_run = True
+                        
+                        elif self.pause_request:
+                            session.state = 'paused'
+                            session.pause_request = False
+                            stop_run = True
                     
-            def hangup_request(channel, ev):
-                print 'CHANNEL HANGUP REQUEST, DIALER ID', self.id
-
-            def user_event(channel, ev):
-                if ev['eventname'] == 'exit_request':
-                    print 'ARI exit request for dialer id: %s' % self.id
-                    exit_request = True
+                        if stop_run:
+                            try:
+                                ari_client.events.userEvent(eventName='exit_request',
+                                    application='dialer-%s-session-%s' % (
+                                            self.id, session.id))
+                            except HTTPError:
+                                pass
+                            return
+                                            
+                        # Go next round    
+                        session_queue = session.queue.search([
+                                                    ('state','=','queued'),
+                                                    ('session', '=', session.id)
+                                                    ], limit=self.simult)
                     
-
-            client = ari.connect('http://localhost:8088', 'dialer', 'test')
-            client.on_channel_event('StasisStart', stasis_start)
-            client.on_channel_event('StasisEnd', stasis_end)
-            client.on_channel_event('ChannelHangupRequest', hangup_request)
-            client.on_channel_event('ChannelUserevent', user_event)
-            client.on_playback_event('PlaybackStarted', playback_started)
-            client.on_playback_event('PlaybackFinished', playback_finished)
-
-            try:
-                client.run(apps='odoo-dialer-%s' % self.id)
-            except Exception, e:
-                if e.args[0] == 104: # on client.close()
-                    pass
-                else:
-                    raise
+                        if not session_queue and self.env['asterisk.dialer.channel'].search_count(
+                                        [('dialer','=',self.id)]) == 0:
+                            # All done as queue is empty and no active channels
+                            session.state = 'done'
+                            self.env.cr.commit()
+                            return
+                        
+                        # Check if we can add more calls
+                        self.env.cr.commit()
+                        if len(self.channels) >= self.simult:
+                            #print 'NO AVAILABLE CHANNELS, TRY NEXT TIME'
+                            continue
+            
+                        for contact in session_queue:                            
+                            contact.state = 'process'
+                            self.env.cr.commit()
+                            originate_call(contact)
+                
+                except Exception, e:
+                    # on client.close() we are always here :-) So just ignore it.
+                    if hasattr(e, 'args') and type(e.args) in (list, tuple) and e.args[0] == 104: 
+                        print e
+                        pass
+                    else:
+                        exc_type, exc_value, exc_traceback = sys.exc_info()
+                        e_txt = '<br/>'.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
+                        # Had to use old api new api compains here about closed cursor :-(
+                        dialer_obj = self.pool.get('asterisk.dialer')
+                        dialer = dialer_obj.browse(new_cr, self.env.uid, [self.id]).message_post(e_txt)
+                        new_cr.commit()
+                        print e_txt
+                        try:
+                            client.close()
+                        except:
+                            pass
+                    
+                
+                finally:                   
+                    self.env.cr.commit()
+                    
+                    if self.dialer_type == 'playback':
+                        try:
+                            ari_client.events.userEvent(eventName='exit_request',
+                                    application='dialer-%s-session-%s' % (
+                                            self.id, self.active_session.id))
+                        except HTTPError:
+                            pass
+                        except Exception,e:
+                            raise
+                    self.env.cr.close()
+                    
+                    if ari_client:
+                        try:
+                            ari_client.close()
+                        except:
+                            pass
+                    
+                                
+                
+        
+        if self.dialer_type == 'playback':
+            # We start Stasis only for playback our file
+            stasis_app = threading.Thread(target=run_stasis_app, name='Stasis app thread')
+            stasis_app.start()
+            
+        dialer_worker = threading.Thread(target=run_dialer, name='Run dialer thread')
+        dialer_worker.start()   
  
+        
+    @api.one
+    def reset(self):
+        if self.active_session:            
+            self.active_session.state = 'cancelled'
+            self.env.cr.commit()
+        
+    
+    @api.one
+    def cancel(self):
+        self.active_session.cancel_request = True
+        self.env.cr.commit()
+    
+    
+    @api.one
+    def pause(self):
+        if self.active_session.state == 'running':
+            self.active_session.pause_request = True
+            self.env.cr.commit()
+
+    @api.one
+    def resume(self):
+        if self.active_session and self.active_session.state == 'paused':
+            self.active_session.state = 'running'
+            self.env.cr.commit()
+            self.start()
 
 
 
@@ -489,14 +422,13 @@ class session(models.Model):
     progress = fields.Integer(compute='_get_progress', string=_('Progress'))
     total = fields.Integer(string=_('Total'))
     sent = fields.Integer(string=_('Sent'))
-    answered = fields.Integer(string=_('Answered'))
+    answer = fields.Integer(string=_('Answered'))
     busy = fields.Integer(string=_('Busy'))
     congestion = fields.Integer(string=_('Congestion'))
-    no_answer = fields.Integer(string=_('No answer'))
-    failed = fields.Integer(string=_('Failed'))
+    noanswer = fields.Integer(string=_('No answer'))
+    chanunavail = fields.Integer(string=_('Chanunavail'))
     cancel_request = fields.Boolean()
     pause_request = fields.Boolean()
-
     
     @api.one
     def _get_progress(self):
@@ -506,11 +438,11 @@ class session(models.Model):
         'state': 'running',
         'total': 0,
         'sent': 0,
-        'answered': 0,
+        'answer': 0,
         'busy': 0,
         'congestion': 0,
-        'no_answer': 0,
-        'failed': 0,
+        'noanswer': 0,
+        'chanunavail': 0,
         'cancel_request': False,
         'pause_request': False,
     }
@@ -545,6 +477,7 @@ class channel(models.Model):
     _name = 'asterisk.dialer.channel'
     
     dialer = fields.Many2one('asterisk.dialer', ondelete='cascade', string=_('Dialer'))
+    session = fields.Many2one('asterisk.dialer.session', string=_('Session'))
     channel_id = fields.Char(select=1)
     other_channel_id = fields.Char(select=1)
     name = fields.Char(string=_('Name'))
@@ -563,6 +496,8 @@ CDR_CHOICES = (
     ('CANCEL', _('Cancel')),
 )
 
+
+
 class cdr(models.Model):
     _name = 'asterisk.dialer.cdr'
     
@@ -574,33 +509,21 @@ class cdr(models.Model):
     status = fields.Selection(CDR_CHOICES, select=1, string=_('Status'))
     start_time = fields.Datetime(string=_('Started'), select=1)
     end_time = fields.Datetime(string=_('Ended'), select=1)
-    #duration = fields.Integer(compute='_get_duration', string=_('Duration'))
-    duration_str = fields.Char(compute='_get_duration_str', string=_('Call duration'))
+    answered_time = fields.Integer(string=_('Answer seconds'))
+    answered_time_str = fields.Char(compute='_get_answered_time_str', string=_('Answer time'))
     playback_start_time = fields.Datetime(string=_('Playback started'))
     playback_end_time = fields.Datetime(string=_('Playback ended'))
     #playback_duration = fields.Integer(compute='_get_playback_duration', string=_('Duration'))
     playback_duration_str = fields.Char(compute='_get_playback_duration_str', string=_('Play duration'))
-    #answered_time = fields.Integer(string=_('Answered seconds'))
     
-    """
-    @api.one
-    def _get_duration(self):
-        if not (self.start_time and self.end_time):
-            self.duration = 0
-        else:
-            self.duration = self.end_time - self.start_time
-    """
     
     @api.one
-    def _get_duration_str(self):
+    def _get_answered_time_str(self):
         # Get nice 00:00:03 string
-        if not (self.start_time and self.end_time):
-            self.duration_str = ''
+        if self.answered_time == None:
+            self.answered_time_str = ''
         else:
-            start_time = datetime.datetime.strptime(self.start_time, '%Y-%m-%d %H:%M:%S')
-            end_time = datetime.datetime.strptime(self.end_time, '%Y-%m-%d %H:%M:%S')
-            delta = end_time-start_time
-            self.duration_str = datetime.timedelta(seconds=delta.seconds).__str__()
+            self.answered_time_str = datetime.timedelta(seconds=self.answered_time).__str__()
     
     
     @api.one

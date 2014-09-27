@@ -1,0 +1,9 @@
+<openerp>
+<data>
+
+    <record id='record_asterisk_server_settings' model='asterisk.server.settings'>
+        <!-- Will be created with _defaults -->
+    </record>
+    
+</data>
+</openerp>

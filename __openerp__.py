@@ -9,6 +9,8 @@
     'data' : [
         'views/dialer_view.xml',
         'views/dialer_data.xml',
+        'views/server_view.xml',
+        'views/server_data.xml',
     ],
     'auto_install': False,
     'installable': True,

@@ -42,3 +42,24 @@ Password is generated with mkpasswd -m sha-512 or just use password_format = pla
 Remember it will be transfered over the network in plain text and if Asterisk is in internet using plain is a security hole. 
 
 Imagine a phone bill for $40,000 for calls to Inmarsat because Asterisk ARI access is sniffed.
+
+### Running Dialer
+Dialer operates in 2 modes (dialer type setting):
+
+* Asterisk dialplan
+* Playback message
+
+#### Asterisk dialplan
+When dialer type is set to playback Dialer originate calls and puts connected calls in specified Asterisk context name.
+
+For example if instead of message playback we need to put every connected call in queue, the following dialplan must be created in extensions.conf:
+
+```
+[queue]
+exten => _X.,1,Queue(test)
+```
+In Dialer configuration field *Context name* must be set to *queue*.
+
+#### Playback message
+In this mode Dialer plays uploaded sound file to called person.
+
