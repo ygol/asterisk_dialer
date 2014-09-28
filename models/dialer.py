@@ -9,12 +9,9 @@ from openerp.exceptions import ValidationError, DeferredException
 from requests.exceptions import HTTPError
 
 
-DIALER_RUN_SLEEP = 5 # Dialer threads sleeps
 
-"""
-ari.connect(get_ari_connection_string())
-ari.connect('http://localhost:8088', 'dialer', 'test')
-"""
+DIALER_RUN_SLEEP = 2 # Dialer threads sleeps
+
 
 DIALER_TYPE_CHOICES = (    
     ('playback', _('Playback message')),
@@ -38,19 +35,21 @@ class dialer(models.Model):
     @api.one
     def _get_cdr_count(self):
         self.cdr_count = self.env['asterisk.dialer.cdr'].search_count([('dialer','=',self.id)])
-        
+    
+    
     @api.one
     def _get_state(self):
-        """
-        Take the latest session. If the session is over e.g. state is done or 
-        cancelled we are ready for a new one. Otherwise return session state.
-        """
-        
         session = self.env['asterisk.dialer.session'].search([('dialer','=',self.id)], order='create_date desc', limit=1)
-        if not session or session.state in ['done', 'cancelled']:
-            self.state = 'ready'
+        if session.state == 'done':
+            self.state = "<span class='glyphicon glyphicon-ok'/>"
+        elif session.state == 'cancelled':
+                self.state = "<span class='glyphicon glyphicon-ok'/>"
+        elif session.state == 'paused':
+            self.state = "<span class='glyphicon glyphicon-ok'/>"
+        elif session.state == 'running':
+            self.state = "<span class='glyphicon glyphicon-ok'/>"
         else:
-            self.state = session.state
+            self.state = ''
         
         
     @api.one
@@ -66,7 +65,7 @@ class dialer(models.Model):
     description = fields.Text(string=_('Description'))
     dialer_type = fields.Selection(DIALER_TYPE_CHOICES, string=_('Type'))
     context_name = fields.Char(string=_('Context name'))
-    state = fields.Char(compute='_get_state', string=_('State'), track_visibility='onchange')
+    state = fields.Html(compute='_get_state', string=_('State'))
     active_session = fields.Many2one('asterisk.dialer.session', compute='_get_active_session')
     sessions = fields.One2many('asterisk.dialer.session', 'dialer')
     sound_file = fields.Binary(string=_('Sound file'))
@@ -121,12 +120,6 @@ class dialer(models.Model):
                 'total': len(contacts),
             })
             
-            for contact in contacts:
-                queue = self.env['asterisk.dialer.queue'].create({
-                    'session': session.id,
-                    'phone': contact.phone,
-                    'name': contact.name,
-                })
         self.env.cr.commit()
         
         stasis_app_ready = threading.Event()
@@ -231,11 +224,13 @@ class dialer(models.Model):
                 # Create CDR
                 cdr = self.env['asterisk.dialer.cdr'].create({
                     'dialer': self.id,
+                    'session': session.id,
                     'channel_id': channelId,
                     'other_channel_id': otherChannelId,
                     'phone': contact.phone,
                     'name': contact.name,
                     'status': 'PROGRESS',
+                    'queue_state': 'queued',
                     'start_time': datetime.datetime.now(),
                     })
                 self.env.cr.commit()
@@ -297,12 +292,12 @@ class dialer(models.Model):
                             return
                                             
                         # Go next round    
-                        session_queue = session.queue.search([
+                        cdr_queue = session.cdrs.search([
                                                     ('state','=','queued'),
                                                     ('session', '=', session.id)
                                                     ], limit=self.simult)
                     
-                        if not session_queue and self.env['asterisk.dialer.channel'].search_count(
+                        if not cdr_queue and self.env['asterisk.dialer.channel'].search_count(
                                         [('dialer','=',self.id)]) == 0:
                             # All done as queue is empty and no active channels
                             session.state = 'done'
@@ -315,10 +310,10 @@ class dialer(models.Model):
                             #print 'NO AVAILABLE CHANNELS, TRY NEXT TIME'
                             continue
             
-                        for contact in session_queue:                            
-                            contact.state = 'process'
+                        for cdr in cdr_queue:                            
+                            cdr.state = 'process'
                             self.env.cr.commit()
-                            originate_call(contact)
+                            originate_call(cdr)
                 
                 except Exception, e:
                     # on client.close() we are always here :-) So just ignore it.
@@ -417,8 +412,8 @@ class session(models.Model):
     _order = 'create_date desc'
     
     dialer = fields.Many2one('asterisk.dialer', string=_('Dialer'))
-    queue = fields.One2many('asterisk.dialer.queue', 'session')
-    state = fields.Selection(SESSION_STATE_CHOICES, string=_('State'))
+    cdrs = fields.One2many('asterisk.dialer.cdr', 'session')
+    state = fields.Selection(SESSION_STATE_CHOICES, string=_('State'), track_visibility='onchange')
     progress = fields.Integer(compute='_get_progress', string=_('Progress'))
     total = fields.Integer(string=_('Total'))
     sent = fields.Integer(string=_('Sent'))
@@ -447,32 +442,9 @@ class session(models.Model):
         'pause_request': False,
     }
         
-    
-    
-QUEUE_STATE_CHOICES = (
-    ('queued', _('Queued')),
-    ('process',_('Process')),
-    ('done', _('Done')),
-)
-class queue(models.Model):
-    """
-    This model holds dialer session calls queue e.g. phone phones to be dialed.
-    phones are added to the queue from dialer contacts when session new dialing 
-    session is opened.
-    """
-    _name = 'asterisk.dialer.queue'
-    
-    session = fields.Many2one('asterisk.dialer.session', string=_('Session'))
-    phone = fields.Char(string=_('Phone'))
-    name = fields.Char(string=_('Name'))
-    state = fields.Selection(QUEUE_STATE_CHOICES, string=_('State'))
-    
-    _defaults = {
-        'state': 'queued',
-    }
-
- 
- 
+        
+        
+        
 class channel(models.Model):
     _name = 'asterisk.dialer.channel'
     
@@ -487,7 +459,9 @@ class channel(models.Model):
 
 
 CDR_CHOICES = (
-    ('PROGRESS', _('Progress')),
+    ('process', _('Process')),
+    ('queue', _('Queued')),
+    # Upper case are ${DIALSTATUS$} from Asterisk
     ('ANSWER', _('Answer')),
     ('BUSY', _('Busy')),
     ('CONGESTION', _('Congestion')),
@@ -497,10 +471,10 @@ CDR_CHOICES = (
 )
 
 
-
 class cdr(models.Model):
     _name = 'asterisk.dialer.cdr'
     
+    session = fields.Many2one('asterisk.dialer.session', string=_('Session'))
     dialer = fields.Many2one('asterisk.dialer', ondelete='cascade', string=_('Dialer'))
     channel_id = fields.Char(select=1)
     other_channel_id = fields.Char(select=1)

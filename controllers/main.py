@@ -43,7 +43,11 @@ class dialer(http.Controller):
                 context=request.context)
         if cdr_id:
             cdr = cdr_obj.browse(request.cr, SUPERUSER_ID, cdr_id, context=request.context)
-            cdr.write({'status': '%s' % status, 'end_time': datetime.now(), 'answered_time': answered_time})
+            cdr.write({'status': '%s' % status, 
+                        'end_time': datetime.now(),
+                        'answered_time': answered_time,
+                        'state': 'done',
+                    })
             request.cr.commit()
             return 'OK'
         else:
