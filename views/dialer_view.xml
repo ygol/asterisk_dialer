@@ -15,16 +15,17 @@
             <form string='Dialer' edit='1'>
                 <header>
                     <field name='active_session' invisible='1'/>
+                    <field name='active_session_state' invisible='1'/>
                     <field name='pause_request' invisible='1' string='Pause'/>
                     <field name='cancel_request' invisible='1' string='Cancel'/>
                     <field name="state" invisible='1'/>    
-                    <button class='oe_highlight oe_read_only' name='start' type='object' string='Start' attrs="{'invisible': [('state','!=','ready')]}"/>
+                    <button class='oe_highlight oe_read_only' name='start' type='object' string='Start' attrs="{'invisible': [('active_session_state','=','running')]}"/>
                     <button class='oe_highlight oe_read_only' name='pause' type='object' string='Pause' 
-                        attrs="{'invisible': ['|','|',('cancel_request','=',True),('pause_request','=',True),('state','!=','running')]}"/>
+                        attrs="{'invisible': ['|','|',('cancel_request','=',True),('pause_request','=',True),('active_session_state','!=','running')]}"/>
                     <button class='oe_read_only' name='cancel' type='object' string='Cancel' 
-                        attrs="{'invisible': ['|','|',('pause_request','=',True),('cancel_request','=',True),('state','!=', 'running')]}"/>
+                        attrs="{'invisible': ['|','|',('pause_request','=',True),('cancel_request','=',True),('active_session_state','!=', 'running')]}"/>
                     <button class='oe_read_only' name='reset' type='object' string='Reset'/>
-                    <button class='oe_highlight oe_read_only' name='resume' type='object' string='Resume' attrs="{'invisible': [('state','!=', 'paused')]}"/>
+                    <button class='oe_highlight oe_read_only' name='resume' type='object' string='Resume' attrs="{'invisible': [('active_session_state','!=', 'paused')]}"/>
                     <div class='oe_form_box_info oe_center' attrs="{'invisible': [('cancel_request','!=',True)]}">
                         <p><strong>Cancelling in  progress. Please wait for current session to terminate...</strong></p>
                     </div>
@@ -45,18 +46,12 @@
                                 <field string="Call Statistics" name="cdr_count" widget="statinfo"/>
                             </button>
                     </div>
-                    <group>
-                    <div class='oe_left'>
-                            <audio attrs="{'invisible': [('dialer_type','!=','playback')]}" id="demo" loop="loop" controls="controls">  
-                                    <source src="horse.ogg" />  
-                            </audio>
-                    </div>
-                    </group>
+
                     <group>
                         <group> 
                             <field name='dialer_type'/>
                             <field name='context_name' attrs="{'invisible': [('dialer_type','=','playback')]}"/>
-                            <field name='sound_file' attrs="{'invisible': [('dialer_type','!=','playback')]}"/>
+                            <field name='sound_file'  attrs="{'invisible': [('dialer_type','!=','playback')]}"/>
                             <field name='dialer_model'/>
                             <field name="dialer_domain" widget="char_domain" placeholder="Select subscribers" 
                                 options="{'model_field': 'dialer_model'}"/>
@@ -119,6 +114,14 @@
         <field name='view_mode'>tree,form</field>
         <field name='res_model'>asterisk.dialer</field>
         <field name='context'>{'mail_create_nolog': '1'}</field>
+        <field name='help' type='html'>
+            <p class='oe_view_nocontent_create'>Click to create a new Dialer.</p>
+            <p>Dialer is used to dial Partners (dialer model is set to <i>Contacts</i>) or custom list of phone numbers (dialer model is set to <i>Subscribers list</i>).</p>
+            <p>After a call is answered Dialer can either playback a message (Dialer type is set to <i>Playback message</i>) or connect the call to Asterisk dialplan 
+            where system administrator can configure his custom dialplan like the following:</p>
+            <pre><code>[queue]
+exten => _X.,1,Queue(test)</code></pre>
+        </field>
     </record>
     
     

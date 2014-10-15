@@ -7,13 +7,15 @@
     'website' : '',
     'category' : 'Asterisk',
     'data' : [
-        'views/glyphicons.xml',
+        'views/assets.xml',
+	'views/soundfile_view.xml',
         'views/dialer_view.xml',
         'views/dialer_data.xml',
         'views/server_view.xml',
         'views/server_data.xml',
     ],
-    'js': ['static/src/.*js'], 
+    'js': ['static/src/js/*.js'],
+    'qweb': ['static/src/xml/*.xml'], 
     'auto_install': False,
     'installable': True,
 }

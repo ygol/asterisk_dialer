@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<openerp>
+    <data>
+	<template id="asterisk_dialer_assets_backend" name="asterisk dialer assets" inherit_id="web.assets_backend">
+        <xpath expr="." position="inside">
+            <script type="text/javascript" src="/asterisk_dialer/static/src/js/asterisk_dialer.js"></script>
+        </xpath>
+	</template>
+    
+    </data>
+</openerp>

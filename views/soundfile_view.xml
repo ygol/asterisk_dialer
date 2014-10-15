@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+        <record id="view_soundfile_form" model="ir.ui.view">
+            <field name="model">asterisk_dialer.sound_file</field>
+            <field name="arch" type="xml">
+                <form string="Sound files">
+                   <sheet>
+                    <label for="name" class="oe_edit_only"/>
+                    <h1>
+                        <field name="name"/>
+                    </h1>
+                    <separator/>
+                    <field name="datas" widget='soundfile' filename="datas_fname"/>
+                    <field name="datas_fname" invisible='1' class="oe_inline oe_right"/>                        
+                    <separator string="Description"/>
+                    <field name="description" nolabel="1"/>
+                  </sheet>
+                </form>
+            </field>
+        </record>
+        
+        <record id="view_soundfile_tree" model="ir.ui.view">
+            <field name="model">asterisk_dialer.sound_file</field>
+            <field name="arch" type="xml">
+                <tree string="Sound files">
+                    <field name="name"/>
+                    <field name="datas_fname"/>
+                </tree>
+            </field>
+        </record>
+        
+        <record id="view_soundfile_search" model="ir.ui.view">
+            <field name="model">asterisk_dialer.sound_file</field>
+            <field name="arch" type="xml">
+                <search string="Sound files">
+                    <field name="name" filter_domain="['|', ('name','ilike',self), ('datas_fname','ilike',self)]" string="File name"/>
+                    <field name="create_date"/>
+                    <separator/>
+                    <filter name="my_documents_filter" 
+                        string="My files"
+                        icon="terp-personal"
+                        domain="[('create_uid','=',uid)]"
+                        help="Filter on my files"/>
+                    <field name="create_uid"/>
+                    <group expand="0" string="Group By">
+                        <filter string="Owner" icon="terp-personal" domain="[]" context="{'group_by':'create_uid'}"/>
+                        <filter string="Creation Month" icon="terp-go-month" domain="[]" context="{'group_by':'create_date'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <record id="action_soundfile" model="ir.actions.act_window">
+            <field name="name">Sound files</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">asterisk_dialer.sound_file</field>
+            <field name="view_type">form</field>
+            <field name="view_id" eval="False"/>
+            <field name="search_view_id" ref="view_soundfile_search"/>
+        </record>
+        
+        <menuitem action="action_soundfile" id="menu_asterisk_dialer_sound_file" parent="asterisk_dialer"/>
+
+    </data>
+</openerp>

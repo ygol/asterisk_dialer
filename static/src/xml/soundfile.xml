@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+
+<t t-name="FieldSoundFile">
+    <t t-if="!widget.get('effective_readonly')">
+        <table class="oe_form_field oe_form_field_binary" cellpadding="0" cellspacing="0" border="0" t-att-style="widget.node.attrs.style">
+        <tr>
+            <td>
+                <input type="text" size="1" readonly="readonly"
+                    t-att-name="widget.name"
+                    t-att-tabindex="widget.node.attrs.tabindex"
+                    t-att-autofocus="widget.node.attrs.autofocus"
+                    class="field_binary"
+                />
+            </td>
+            <td class="oe_form_binary" nowrap="true">
+                <table cellspacing="0" cellpadding="0" border="0">
+                <tr>
+                    <td>
+                        <t t-call="HiddenInputFile">
+                            <t t-set="fileupload_id" t-value="widget.fileupload_id"/>
+                            <t t-set="fileupload_style" t-translation="off">overflow-x: hidden</t>
+                            <button class="oe_button oe_field_button" type="button">
+                                <img t-att-src='_s + "/web/static/src/img/icons/STOCK_DIRECTORY.png"'/>
+                                <span>Select</span>
+                            </button>
+                        </t>
+                    </td>
+                    <td>
+                        <a class="oe_form_binary_file_save_data">
+                            <button class="oe_button oe_form_binary_file_save" type="button" title="Save As">
+                                <img t-att-src='_s + "/web/static/src/img/icons/gtk-save.png"'/>
+                                <span>Save As</span>
+                            </button>
+                        </a>
+                    </td>
+                    <td>
+                        <button class="oe_button oe_form_binary_file_clear" type="button" title="Clear">
+                            <img t-att-src='_s + "/web/static/src/img/icons/STOCK_MISSING_IMAGE.png"'/>
+                            <span>Clear</span>
+                        </button>
+                    </td>
+                </tr>
+                </table>
+            </td>
+            <td class="oe_form_binary_progress" style="display: none" nowrap="true">
+                <img t-att-src='_s + "/web/static/src/img/throbber.gif"' width="16" height="16"/>
+                <b>Uploading ...</b>
+            </td>
+        </tr>
+        </table>
+    </t>
+    <t t-if="widget.get('effective_readonly')">
+        <span t-att-style="widget.node.attrs.style">
+            <audio id="sound_file">  
+                <source t-att-src='none'/>  
+            </audio>
+        </span>
+    </t>
+</t>
+
+<t t-name="FieldSoundFile-audio">
+    <audio id="sound_file" preload='auto' controls="controls">  
+        <source t-att-src='url'/>  
+    </audio>
+</t>
+
+</templates>
