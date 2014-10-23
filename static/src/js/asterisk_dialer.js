@@ -2,6 +2,15 @@ openerp.asterisk_dialer = function(instance) {
     var _t = instance.web._t,
         _lt = instance.web._lt;
     var QWeb = instance.web.qweb;
+
+    instance.web.list.columns.add('field.html', 'instance.web.list.Html');
+    
+    instance.web.list.Html= instance.web.list.Column.extend({
+        _format: function (row_data, options) {
+            return row_data[this.id].value;
+        }                                                                                                                                                                   
+    });
+
     
     instance.web.form.widgets.add('soundfile', 'instance.web.form.FieldSoundFile');
     
