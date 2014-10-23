@@ -7,6 +7,8 @@ Asterisk dialer for Odoo.
 
 ## Installation
 * Install [**my fork**](https://github.com/litnimax/odoo/) of Odoo 8.0. There is a bug in char_domain widget not yet fixed by the Odoo team so for now pls stick to mine. 
+ * Checkout my Odoo 8.0:  ```git clone -b 8.0 https://github.com/litnimax/odoo.git odoo```
+
 * Install latest Asterisk. Versions < 12 do not have ARI support. 
 * Install odoo_asterisk_dialer module. Download from Github (using git clone or Download zip), rename folder to asterisk_dialer. Put this folder in your addons path (
 see addons_path in Odoo configuration file (create initial one with ./odoo -s, CTRL+C and take it  from ~/.openerp_serverrc) or use an example configuration provided below.
