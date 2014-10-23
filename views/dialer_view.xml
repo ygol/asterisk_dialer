@@ -190,7 +190,6 @@ exten => _X.,1,Queue(test)</code></pre>
         <field name='view_mode'>tree,form</field>
         <field name='res_model'>asterisk.dialer.subscriber.list</field>
     </record>    
-    <menuitem id='asterisk_dialer_subscriber_list' name='Subscriber lists' parent='asterisk_dialer' action='dialer_subscriber_list'/>
     
 
     <record id='dialer_subscribers_tree' model='ir.ui.view'>
@@ -224,7 +223,6 @@ exten => _X.,1,Queue(test)</code></pre>
         <field name='view_mode'>tree,form</field>
         <field name='res_model'>asterisk.dialer.subscriber</field>
     </record>    
-    <menuitem id='asterisk_dialer_subscribers' name='Subscribers' parent='asterisk_dialer' action='dialer_subscribers'/>
 
 
     <record id='dialer_stats_tree' model='ir.ui.view'>
@@ -311,5 +309,7 @@ exten => _X.,1,Queue(test)</code></pre>
     <menuitem id='asterisk_dialer' name='Dialer' parent='asterisk_topmenu'/>
     <menuitem id='asterisk_dialer_dialer' name='Dialer' parent='asterisk_dialer' action='dialer'/>
     <menuitem id='asterisk_dialer_cdr' name='Stats' parent='asterisk_dialer' action='dialer_cdr'/>
+    <menuitem id='asterisk_dialer_subscriber_list' name='Subscriber lists' parent='asterisk_dialer' action='dialer_subscriber_list'/>
+    <menuitem id='asterisk_dialer_subscribers' name='Subscribers' parent='asterisk_dialer' action='dialer_subscribers'/>
 
 </data></openerp>
