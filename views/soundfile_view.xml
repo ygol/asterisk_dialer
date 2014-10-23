@@ -2,7 +2,7 @@
 <openerp>
     <data>
         <record id="view_soundfile_form" model="ir.ui.view">
-            <field name="model">asterisk_dialer.sound_file</field>
+            <field name="model">asterisk.dialer.soundfile</field>
             <field name="arch" type="xml">
                 <form string="Sound files">
                    <sheet>
@@ -12,7 +12,8 @@
                     </h1>
                     <separator/>
                     <field name="datas" widget='soundfile' filename="datas_fname"/>
-                    <field name="datas_fname" invisible='1' class="oe_inline oe_right"/>                        
+                    <field name="datas_fname" invisible='1' class="oe_inline oe_right"/>  
+                    <field name='version' invisible='1'/>
                     <separator string="Description"/>
                     <field name="description" nolabel="1"/>
                   </sheet>
@@ -21,7 +22,7 @@
         </record>
         
         <record id="view_soundfile_tree" model="ir.ui.view">
-            <field name="model">asterisk_dialer.sound_file</field>
+            <field name="model">asterisk.dialer.soundfile</field>
             <field name="arch" type="xml">
                 <tree string="Sound files">
                     <field name="name"/>
@@ -31,7 +32,7 @@
         </record>
         
         <record id="view_soundfile_search" model="ir.ui.view">
-            <field name="model">asterisk_dialer.sound_file</field>
+            <field name="model">asterisk.dialer.soundfile</field>
             <field name="arch" type="xml">
                 <search string="Sound files">
                     <field name="name" filter_domain="['|', ('name','ilike',self), ('datas_fname','ilike',self)]" string="File name"/>
@@ -54,7 +55,7 @@
         <record id="action_soundfile" model="ir.actions.act_window">
             <field name="name">Sound files</field>
             <field name="type">ir.actions.act_window</field>
-            <field name="res_model">asterisk_dialer.sound_file</field>
+            <field name="res_model">asterisk.dialer.soundfile</field>
             <field name="view_type">form</field>
             <field name="view_id" eval="False"/>
             <field name="search_view_id" ref="view_soundfile_search"/>

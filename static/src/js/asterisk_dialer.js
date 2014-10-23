@@ -42,6 +42,7 @@ openerp.asterisk_dialer = function(instance) {
                                         model: this.view.dataset.model,
                                         id: (this.view.datarecord.id || ''),
                                         field: this.name,
+                                        version: this.view.datarecord.version,
                                         filename_field: (this.node.attrs.filename || ''),
                                         });
             var $audio = $(QWeb.render('FieldSoundFile-audio', {widget: this, url: url}));

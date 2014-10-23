@@ -1,0 +1,996 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* asterisk_dialer
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 8.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2014-10-22 11:05+0000\n"
+"PO-Revision-Date: 2014-10-22 15:08+0300\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: \n"
+"X-Generator: Poedit 1.5.4\n"
+
+#. module: asterisk_dialer
+#: model:ir.actions.act_window,help:asterisk_dialer.dialer
+msgid ""
+"<p class=\"oe_view_nocontent_create\">Click to create a new Dialer.</p>\n"
+"            <p>Dialer is used to dial Partners (dialer model is set to "
+"<i>Contacts</i>) or custom list of phone numbers (dialer model is set to "
+"<i>Subscribers list</i>).</p>\n"
+"            <p>After a call is answered Dialer can either playback a message "
+"(Dialer type is set to <i>Playback message</i>) or connect the call to "
+"Asterisk dialplan \n"
+"            where system administrator can configure his custom dialplan "
+"like the following:</p>\n"
+"            <pre><code>[queue]\n"
+"exten =&gt; _X.,1,Queue(test)</code></pre>\n"
+"        "
+msgstr ""
+"<p class=\"oe_view_nocontent_create\">Click to create a new Dialer.</p>\n"
+"            <p>Dialer is used to dial Partners (dialer model is set to "
+"<i>Contacts</i>) or custom list of phone numbers (dialer model is set to "
+"<i>Subscribers list</i>).</p>\n"
+"            <p>After a call is answered Dialer can either playback a message "
+"(Dialer type is set to <i>Playback message</i>) or connect the call to "
+"Asterisk dialplan \n"
+"            where system administrator can configure his custom dialplan "
+"like the following:</p>\n"
+"            <pre><code>[queue]\n"
+"exten =&gt; _X.,1,Queue(test)</code></pre>\n"
+"        "
+
+#. module: asterisk_dialer
+#: view:asterisk.server.settings:asterisk_dialer.view_asterisk_server_settings
+msgid "ARI Connection Information"
+msgstr "Данные подключения к ARI"
+
+#. module: asterisk_dialer
+#: view:asterisk.server.settings:asterisk_dialer.view_asterisk_server_settings
+msgid "ARI access"
+msgstr "Доступ к ARI "
+
+#. module: asterisk_dialer
+#: view:asterisk.server.settings:asterisk_dialer.view_asterisk_server_settings
+msgid "ARI configuration"
+msgstr "Настройки ARI"
+
+#. module: asterisk_dialer
+#: view:asterisk.server.settings:asterisk_dialer.view_asterisk_server_settings
+msgid "ARI is configured in ari.conf. Example of configuration:"
+msgstr "ARI настраивается в ari.conf. Пример конфигурации:"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/server.py:11
+#: field:asterisk.server.settings,ari_pass:0
+#, python-format
+msgid "ARI password"
+msgstr "Пароль ARI"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/server.py:10
+#: field:asterisk.server.settings,ari_user:0
+#, python-format
+msgid "ARI username"
+msgstr "Имя пользователя ARI"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/dialer.py:546
+#: selection:asterisk.dialer.cdr,status:0
+#, python-format
+msgid "Answer"
+msgstr "Ответ"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/dialer.py:567
+#: field:asterisk.dialer.cdr,answered_time:0
+#, python-format
+msgid "Answer seconds"
+msgstr "Длительность, секунд"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/dialer.py:569
+#: view:asterisk.dialer.cdr:asterisk_dialer.dialer_stats_tree
+#, python-format
+msgid "Answer time"
+msgstr "Время ответа"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/dialer.py:487
+#: view:asterisk.dialer.cdr:asterisk_dialer.dialer_stats_search
+#: field:asterisk.dialer.session,answer:0
+#, python-format
+msgid "Answered"
+msgstr "Отвечено"
+
+#. module: asterisk_dialer
+#: view:asterisk.server.settings:asterisk_dialer.view_asterisk_server_settings
+msgid "Apply"
+msgstr "Применить"
+
+#. module: asterisk_dialer
+#: model:ir.ui.menu,name:asterisk_dialer.asterisk_topmenu
+msgid "Asterisk"
+msgstr "Asterisk"
+
+#. module: asterisk_dialer
+#: model:ir.actions.act_window,name:asterisk_dialer.action_asterisk_server_settings
+#: model:ir.ui.menu,name:asterisk_dialer.menu_asterisk_server_settings
+msgid "Asterisk Dialer"
+msgstr "Asterisk-обзвонщик"
+
+#. module: asterisk_dialer
+#: model:res.groups,name:asterisk_dialer.asterisk_dialer_admin
+msgid "Asterisk Dialer Admin"
+msgstr "Администратор Asterisk-Обзвонщика"
+
+#. module: asterisk_dialer
+#: view:asterisk.server.settings:asterisk_dialer.view_asterisk_server_settings
+msgid "Asterisk Dialplan for Dialer"
+msgstr "Диалплан Asterisk для Обзвонщика"
+
+#. module: asterisk_dialer
+#: view:asterisk.server.settings:asterisk_dialer.view_asterisk_server_settings
+msgid "Asterisk HTTP server info"
+msgstr "Настройки Asterisk HTTP сервера"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/dialer.py:20
+#: selection:asterisk.dialer,dialer_type:0
+#, python-format
+msgid "Asterisk dialplan"
+msgstr "Диалплан Asterisk"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/server.py:8
+#: field:asterisk.server.settings,http_port:0
+#, python-format
+msgid "Asterisk server HTTP port"
+msgstr "HTTP порт сервера Asterisk"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/server.py:6
+#: field:asterisk.server.settings,ip_addr:0
+#, python-format
+msgid "Asterisk server IP adress, not hostname"
+msgstr "IP адрес сервера Asterisk (не имя хоста)"
+
+#. module: asterisk_dialer
+#: view:res.partner:asterisk_dialer.search_partner_with_phone
+msgid "Available for calling"
+msgstr "Доступные для звонка"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/dialer.py:488
+#: code:addons/asterisk_dialer/models/dialer.py:547
+#: view:asterisk.dialer.cdr:asterisk_dialer.dialer_stats_search
+#: selection:asterisk.dialer.cdr,status:0 field:asterisk.dialer.session,busy:0
+#, python-format
+msgid "Busy"
+msgstr "Занято"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/dialer.py:89
+#: field:asterisk.dialer,cdrs:0
+#, python-format
+msgid "Call Detail Records"
+msgstr "Записи о звонках"
+
+#. module: asterisk_dialer
+#: view:asterisk.dialer:asterisk_dialer.dialer_view_form
+msgid "Call Statistics"
+msgstr "Звонков"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/dialer.py:538
+#: field:asterisk.dialer.channel,start_time:0
+#, python-format
+msgid "Call started"
+msgstr "Звонок начался"
+
+#. module: asterisk_dialer
+#: view:asterisk.dialer.cdr:asterisk_dialer.asterisk_dialer_cdr_graph
+msgid "Calls"
+msgstr "Звонков"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/dialer.py:551
+#: view:asterisk.dialer:asterisk_dialer.dialer_view_form
+#: view:asterisk.dialer.cdr:asterisk_dialer.dialer_stats_search
+#: selection:asterisk.dialer.cdr,status:0
+#, python-format
+msgid "Cancel"
+msgstr "Отмененить"
+
+#. module: asterisk_dialer
+#: field:asterisk.dialer.session,cancel_request:0
+msgid "Cancel request"
+msgstr "Запрос на отмену"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/dialer.py:464
+#: selection:asterisk.dialer.session,state:0
+#, python-format
+msgid "Cancelled"
+msgstr "Отменено"
+
+#. module: asterisk_dialer
+#: view:asterisk.dialer:asterisk_dialer.dialer_view_form
+msgid ""
+"Cancelling in  progress. Please wait for current session to terminate..."
+msgstr "Отменение в процессе. Дождитесь завершения текущей Сессии..."
+
+#. module: asterisk_dialer
+#: field:asterisk.dialer.session,cdrs:0
+msgid "Cdrs"
+msgstr "Записи о звонках"
+
+#. module: asterisk_dialer
+#: field:asterisk.dialer.cdr,channel_id:0
+#: field:asterisk.dialer.channel,channel_id:0
+msgid "Channel id"
+msgstr "ID канала"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/dialer.py:550
+#: view:asterisk.dialer.cdr:asterisk_dialer.dialer_stats_search
+#: selection:asterisk.dialer.cdr,status:0
+#, python-format
+msgid "Channel unavailable"
+msgstr "Канал недоступен"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/dialer.py:491
+#: field:asterisk.dialer.session,chanunavail:0
+#, python-format
+msgid "Chanunavail"
+msgstr "Канал недост."
+
+#. module: asterisk_dialer
+#. openerp-web
+#: code:addons/asterisk_dialer/static/src/xml/soundfile.xml:38
+#: code:addons/asterisk_dialer/static/src/xml/soundfile.xml:40
+#: view:asterisk.server.settings:asterisk_dialer.view_asterisk_server_settings
+#, python-format
+msgid "Clear"
+msgstr "Сбросить"
+
+#. module: asterisk_dialer
+#: view:asterisk.server.settings:asterisk_dialer.view_asterisk_server_settings
+msgid "Configure Asterisk Server"
+msgstr "Настройки сервера Asterisk"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/dialer.py:489
+#: code:addons/asterisk_dialer/models/dialer.py:548
+#: view:asterisk.dialer.cdr:asterisk_dialer.dialer_stats_search
+#: selection:asterisk.dialer.cdr,status:0
+#: field:asterisk.dialer.session,congestion:0
+#, python-format
+msgid "Congestion"
+msgstr "Коллизия"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/dialer.py:33
+#, python-format
+msgid "Contacts"
+msgstr "Контакты"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/dialer.py:73
+#: field:asterisk.dialer,context_name:0
+#, python-format
+msgid "Context name"
+msgstr "Название контекста"
+
+#. module: asterisk_dialer
+#. openerp-web
+#: code:addons/asterisk_dialer/static/src/js/asterisk_dialer.js:52
+#, python-format
+msgid "Could not use sound file"
+msgstr "Невозможно использовать Звуковой Файл"
+
+#. module: asterisk_dialer
+#: field:asterisk.dialer,create_uid:0 field:asterisk.dialer.cdr,create_uid:0
+#: field:asterisk.dialer.channel,create_uid:0
+#: field:asterisk.dialer.session,create_uid:0
+#: field:asterisk.dialer.soundfile,create_uid:0
+#: field:asterisk.dialer.subscriber,create_uid:0
+#: field:asterisk.dialer.subscriber.list,create_uid:0
+#: field:asterisk.server.settings,create_uid:0
+msgid "Created by"
+msgstr "Создано"
+
+#. module: asterisk_dialer
+#: field:asterisk.dialer,create_date:0 field:asterisk.dialer.cdr,create_date:0
+#: field:asterisk.dialer.channel,create_date:0
+#: field:asterisk.dialer.session,create_date:0
+#: field:asterisk.dialer.soundfile,create_date:0
+#: field:asterisk.dialer.subscriber,create_date:0
+#: field:asterisk.dialer.subscriber.list,create_date:0
+#: field:asterisk.server.settings,create_date:0
+msgid "Created on"
+msgstr "Создано"
+
+#. module: asterisk_dialer
+#: view:asterisk.dialer.soundfile:asterisk_dialer.view_soundfile_search
+msgid "Creation Month"
+msgstr "Месяц создания"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/dialer.py:88
+#: view:asterisk.dialer:asterisk_dialer.dialer_view_form
+#: field:asterisk.dialer,channels:0
+#, python-format
+msgid "Current calls"
+msgstr "Текущие звонки"
+
+#. module: asterisk_dialer
+#: view:asterisk.dialer.cdr:asterisk_dialer.dialer_stats_search
+msgid "Date"
+msgstr "Дата"
+
+#. module: asterisk_dialer
+#: help:asterisk.dialer,message_last_post:0
+msgid "Date of the last message posted on the record."
+msgstr "Дата последнего добавленного сообщения"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/dialer.py:71
+#: code:addons/asterisk_dialer/models/soundfile.py:16
+#: field:asterisk.dialer,description:0
+#: view:asterisk.dialer.soundfile:asterisk_dialer.view_soundfile_form
+#: field:asterisk.dialer.soundfile,description:0
+#, python-format
+msgid "Description"
+msgstr "Описание"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/dialer.py:480
+#: code:addons/asterisk_dialer/models/dialer.py:532
+#: code:addons/asterisk_dialer/models/dialer.py:559
+#: view:asterisk.dialer:asterisk_dialer.dialer_view_form
+#: view:asterisk.dialer.cdr:asterisk_dialer.dialer_stats_search
+#: field:asterisk.dialer.cdr,dialer:0 field:asterisk.dialer.channel,dialer:0
+#: field:asterisk.dialer.session,dialer:0
+#: model:ir.actions.act_window,name:asterisk_dialer.dialer
+#: model:ir.model,name:asterisk_dialer.model_asterisk_dialer
+#: model:ir.ui.menu,name:asterisk_dialer.asterisk_dialer
+#: model:ir.ui.menu,name:asterisk_dialer.asterisk_dialer_dialer
+#, python-format
+msgid "Dialer"
+msgstr "Обзвонщик"
+
+#. module: asterisk_dialer
+#: model:ir.actions.act_window,name:asterisk_dialer.dialer_cdr
+msgid "Dialer Stats"
+msgstr "Статистика Обзвона"
+
+#. module: asterisk_dialer
+#: model:ir.actions.act_window,name:asterisk_dialer.dialer_subscriber_list
+msgid "Dialer Subscriber List"
+msgstr "Список абонентов Обзвонщика"
+
+#. module: asterisk_dialer
+#: model:ir.actions.act_window,name:asterisk_dialer.dialer_subscribers
+msgid "Dialer Subscribers"
+msgstr "Абоненты Обзвонщика"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/dialer.py:86
+#: field:asterisk.dialer,dialer_model:0
+#, python-format
+msgid "Dialer model"
+msgstr "Модель обзвонщика"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/dialer.py:111
+#, python-format
+msgid "Dialer type is Dialplan and Asterisk context not set!"
+msgstr "Тип Обзвонщика Диалплан, а контекст Asterisk не задан!"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/dialer.py:109
+#, python-format
+msgid "Dialer type is Playback and sound file not set!"
+msgstr "Тип Обзвонщика Проиграть Сообщение, а звуковой файл не задан!"
+
+#. module: asterisk_dialer
+#: view:asterisk.dialer:asterisk_dialer.dialer_view_tree
+msgid "Dialers"
+msgstr "Обзвонщики"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/server.py:12
+#: field:asterisk.server.settings,context_name:0
+#, python-format
+msgid "Dialplan context"
+msgstr "Контекст диалплана"
+
+#. module: asterisk_dialer
+#: view:asterisk.server.settings:asterisk_dialer.view_asterisk_server_settings
+msgid "Dialplan context name, see README for details"
+msgstr "Название контекста диалплана, подробности в README"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/dialer.py:463
+#: selection:asterisk.dialer.session,state:0
+#, python-format
+msgid "Done"
+msgstr "Завершено"
+
+#. module: asterisk_dialer
+#. openerp-web
+#: code:addons/asterisk_dialer/static/src/js/asterisk_dialer.js:35
+#, python-format
+msgid "Download"
+msgstr "Скачать"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/dialer.py:495
+#: code:addons/asterisk_dialer/models/dialer.py:566
+#: field:asterisk.dialer.cdr,end_time:0
+#: field:asterisk.dialer.session,end_time:0
+#, python-format
+msgid "Ended"
+msgstr "Закончено"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/dialer.py:466
+#: selection:asterisk.dialer.session,state:0
+#, python-format
+msgid "Error"
+msgstr "Ошибка"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/soundfile.py:14
+#, python-format
+msgid "File content"
+msgstr "Содержание файла"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/soundfile.py:54
+#, python-format
+msgid ""
+"File conversion error. Cannot convert to WAVE audio, Microsoft PCM, 16 bit, "
+"mono 8000 Hz"
+msgstr ""
+"Ошибка преобразования файла. Не удалось конвертировать в WAVE audio, "
+"Microsoft PCM, 16 bit, mono 8000 Hz"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/soundfile.py:15
+#: view:asterisk.dialer.soundfile:asterisk_dialer.view_soundfile_search
+#: field:asterisk.dialer.soundfile,datas_fname:0
+#, python-format
+msgid "File name"
+msgstr "Название файла"
+
+#. module: asterisk_dialer
+#: view:asterisk.dialer.soundfile:asterisk_dialer.view_soundfile_search
+msgid "Filter on my files"
+msgstr "Фильтровать по моим файлам"
+
+#. module: asterisk_dialer
+#: field:asterisk.dialer,message_follower_ids:0
+msgid "Followers"
+msgstr "Подписчики"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/dialer.py:82
+#: field:asterisk.dialer,from_time:0
+#, python-format
+msgid "From time"
+msgstr "Начиная с"
+
+#. module: asterisk_dialer
+#: view:asterisk.dialer.soundfile:asterisk_dialer.view_soundfile_search
+msgid "Group By"
+msgstr "Группировать по"
+
+#. module: asterisk_dialer
+#: view:asterisk.dialer.cdr:asterisk_dialer.dialer_stats_search
+#: view:asterisk.dialer.subscriber:asterisk_dialer.asterisk_dialer_subscriber_search
+msgid "Group by"
+msgstr "Группировать по"
+
+#. module: asterisk_dialer
+#: help:asterisk.dialer,message_summary:0
+msgid ""
+"Holds the Chatter summary (number of messages, ...). This summary is "
+"directly in html format in order to be inserted in kanban views."
+msgstr ""
+"Holds the Chatter summary (number of messages, ...). This summary is "
+"directly in html format in order to be inserted in kanban views."
+
+#. module: asterisk_dialer
+#: field:asterisk.dialer,id:0 field:asterisk.dialer.cdr,id:0
+#: field:asterisk.dialer.channel,id:0 field:asterisk.dialer.session,id:0
+#: field:asterisk.dialer.soundfile,id:0 field:asterisk.dialer.subscriber,id:0
+#: field:asterisk.dialer.subscriber.list,id:0
+#: field:asterisk.server.settings,id:0
+msgid "ID"
+msgstr "ID"
+
+#. module: asterisk_dialer
+#: help:asterisk.dialer,message_unread:0
+msgid "If checked new messages require your attention."
+msgstr "If checked new messages require your attention."
+
+#. module: asterisk_dialer
+#: field:asterisk.dialer,message_is_follower:0
+msgid "Is a Follower"
+msgstr "Is a Follower"
+
+#. module: asterisk_dialer
+#: field:asterisk.dialer,message_last_post:0
+msgid "Last Message Date"
+msgstr "Last Message Date"
+
+#. module: asterisk_dialer
+#: field:asterisk.dialer,write_uid:0 field:asterisk.dialer.cdr,write_uid:0
+#: field:asterisk.dialer.channel,write_uid:0
+#: field:asterisk.dialer.session,write_uid:0
+#: field:asterisk.dialer.soundfile,write_uid:0
+#: field:asterisk.dialer.subscriber,write_uid:0
+#: field:asterisk.dialer.subscriber.list,write_uid:0
+#: field:asterisk.server.settings,write_uid:0
+msgid "Last Updated by"
+msgstr "Last Updated by"
+
+#. module: asterisk_dialer
+#: field:asterisk.dialer,write_date:0 field:asterisk.dialer.cdr,write_date:0
+#: field:asterisk.dialer.channel,write_date:0
+#: field:asterisk.dialer.session,write_date:0
+#: field:asterisk.dialer.soundfile,write_date:0
+#: field:asterisk.dialer.subscriber,write_date:0
+#: field:asterisk.dialer.subscriber.list,write_date:0
+#: field:asterisk.server.settings,write_date:0
+msgid "Last Updated on"
+msgstr "Last Updated on"
+
+#. module: asterisk_dialer
+#: view:asterisk.dialer.subscriber:asterisk_dialer.asterisk_dialer_subscriber_search
+msgid "List"
+msgstr "Список"
+
+#. module: asterisk_dialer
+#: field:asterisk.dialer,message_ids:0
+msgid "Messages"
+msgstr "Сообщения"
+
+#. module: asterisk_dialer
+#: help:asterisk.dialer,message_ids:0
+msgid "Messages and communication history"
+msgstr "Messages and communication history"
+
+#. module: asterisk_dialer
+#: view:asterisk.dialer.soundfile:asterisk_dialer.view_soundfile_search
+msgid "My files"
+msgstr "Мои файлы"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/dialer.py:70
+#: code:addons/asterisk_dialer/models/dialer.py:536
+#: code:addons/asterisk_dialer/models/dialer.py:562
+#: code:addons/asterisk_dialer/models/dialer.py:600
+#: field:asterisk.dialer,name:0 field:asterisk.dialer.cdr,name:0
+#: field:asterisk.dialer.channel,name:0
+#: field:asterisk.dialer.subscriber.list,name:0
+#, python-format
+msgid "Name"
+msgstr "Название"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/dialer.py:490
+#: code:addons/asterisk_dialer/models/dialer.py:549
+#: view:asterisk.dialer.cdr:asterisk_dialer.dialer_stats_search
+#: selection:asterisk.dialer.cdr,status:0
+#: field:asterisk.dialer.session,noanswer:0
+#, python-format
+msgid "No answer"
+msgstr "Нет ответа"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/dialer.py:90
+#, python-format
+msgid "Number of call detail records"
+msgstr "Число записей о звонках"
+
+#. module: asterisk_dialer
+#: field:asterisk.dialer.cdr,other_channel_id:0
+#: field:asterisk.dialer.channel,other_channel_id:0
+msgid "Other channel id"
+msgstr "ID второго канала"
+
+#. module: asterisk_dialer
+#: view:asterisk.dialer.soundfile:asterisk_dialer.view_soundfile_search
+msgid "Owner"
+msgstr "Owner"
+
+#. module: asterisk_dialer
+#: view:asterisk.server.settings:asterisk_dialer.view_asterisk_server_settings
+msgid ""
+"Password is generated with mkpasswd -m sha-512 or just use password_format = "
+"plain at your risk ;-)"
+msgstr ""
+"Пароль генерируется командой mkpasswd -m sha-512, или используйте "
+"password_format = plain на свой риск ;-)"
+
+#. module: asterisk_dialer
+#: view:asterisk.dialer:asterisk_dialer.dialer_view_form
+msgid "Pause"
+msgstr "Приостановка"
+
+#. module: asterisk_dialer
+#: view:asterisk.dialer:asterisk_dialer.dialer_view_form
+msgid "Pause in  progress. Please wait for current session to terminate..."
+msgstr "Приостанавливается. Дождитесь завершения текущей Сессии..."
+
+#. module: asterisk_dialer
+#: field:asterisk.dialer.session,pause_request:0
+msgid "Pause request"
+msgstr "Запрос на приостановку"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/dialer.py:465
+#: selection:asterisk.dialer.session,state:0
+#, python-format
+msgid "Paused"
+msgstr "Приостановлено"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/dialer.py:537
+#: code:addons/asterisk_dialer/models/dialer.py:563
+#: field:asterisk.dialer.cdr,phone:0 field:asterisk.dialer.channel,phone:0
+#, python-format
+msgid "Phone"
+msgstr "Телефон"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/dialer.py:618
+#: field:asterisk.dialer.subscriber,phone:0
+#, python-format
+msgid "Phone number"
+msgstr "Номер телефона"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/dialer.py:573
+#, python-format
+msgid "Play duration"
+msgstr "Длительность проигрывания"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/dialer.py:571
+#: field:asterisk.dialer.cdr,playback_end_time:0
+#, python-format
+msgid "Playback ended"
+msgstr "Проигрывание закончено"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/dialer.py:19
+#: selection:asterisk.dialer,dialer_type:0
+#, python-format
+msgid "Playback message"
+msgstr "Проигрываемое сообщение"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/dialer.py:570
+#: field:asterisk.dialer.cdr,playback_start_time:0
+#, python-format
+msgid "Playback started"
+msgstr "Проигрывание начато"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/dialer.py:543
+#: selection:asterisk.dialer.cdr,status:0
+#, python-format
+msgid "Process"
+msgstr "Процесс"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/dialer.py:484
+#: view:asterisk.dialer.session:asterisk_dialer.session_view_form
+#, python-format
+msgid "Progress"
+msgstr "В процессе"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/dialer.py:544
+#: selection:asterisk.dialer.cdr,status:0
+#, python-format
+msgid "Queued"
+msgstr "В очереди"
+
+#. module: asterisk_dialer
+#: view:asterisk.dialer:asterisk_dialer.dialer_view_form
+msgid "Reset"
+msgstr "Сбросить"
+
+#. module: asterisk_dialer
+#: view:asterisk.dialer:asterisk_dialer.dialer_view_form
+msgid "Resume"
+msgstr "Возобновить"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/dialer.py:462
+#: selection:asterisk.dialer.session,state:0
+#, python-format
+msgid "Running"
+msgstr "Работает"
+
+#. module: asterisk_dialer
+#. openerp-web
+#: code:addons/asterisk_dialer/static/src/xml/soundfile.xml:31
+#: code:addons/asterisk_dialer/static/src/xml/soundfile.xml:33
+#, python-format
+msgid "Save As"
+msgstr "Сохранить как"
+
+#. module: asterisk_dialer
+#: view:asterisk.dialer.cdr:asterisk_dialer.dialer_stats_search
+msgid "Search Stats"
+msgstr "Поиск по статистике"
+
+#. module: asterisk_dialer
+#. openerp-web
+#: code:addons/asterisk_dialer/static/src/xml/soundfile.xml:25
+#, python-format
+msgid "Select"
+msgstr "Выбрать"
+
+#. module: asterisk_dialer
+#: view:asterisk.dialer:asterisk_dialer.dialer_view_form
+msgid "Select subscribers"
+msgstr "Выбрать абонентов"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/dialer.py:87
+#: field:asterisk.dialer,dialer_domain:0
+#, python-format
+msgid "Selection"
+msgstr "Выборка"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/dialer.py:486
+#: field:asterisk.dialer.session,sent:0
+#, python-format
+msgid "Sent"
+msgstr "Набрано"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/dialer.py:533
+#: code:addons/asterisk_dialer/models/dialer.py:558
+#: view:asterisk.dialer.cdr:asterisk_dialer.dialer_stats_search
+#: field:asterisk.dialer.cdr,session:0 field:asterisk.dialer.channel,session:0
+#: view:asterisk.dialer.session:asterisk_dialer.session_view_form
+#, python-format
+msgid "Session"
+msgstr "Сессия"
+
+#. module: asterisk_dialer
+#: view:asterisk.dialer:asterisk_dialer.dialer_view_form
+#: field:asterisk.dialer,sessions:0
+msgid "Sessions"
+msgstr "Сессии"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/dialer.py:91
+#: field:asterisk.dialer,simult:0
+#, python-format
+msgid "Simultaneous calls"
+msgstr "Одновременно звонков"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/dialer.py:78
+#: field:asterisk.dialer,sound_file:0
+#, python-format
+msgid "Sound file"
+msgstr "Звуковой файл"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/soundfile.py:13
+#: field:asterisk.dialer.soundfile,name:0
+#, python-format
+msgid "Sound file name"
+msgstr "Название звукового файла"
+
+#. module: asterisk_dialer
+#: view:asterisk.dialer.soundfile:asterisk_dialer.view_soundfile_form
+#: view:asterisk.dialer.soundfile:asterisk_dialer.view_soundfile_search
+#: view:asterisk.dialer.soundfile:asterisk_dialer.view_soundfile_tree
+#: model:ir.actions.act_window,name:asterisk_dialer.action_soundfile
+#: model:ir.ui.menu,name:asterisk_dialer.menu_asterisk_dialer_sound_file
+msgid "Sound files"
+msgstr "Звуковые файлы"
+
+#. module: asterisk_dialer
+#: view:asterisk.dialer:asterisk_dialer.dialer_view_form
+msgid "Start"
+msgstr "Начать"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/dialer.py:494
+#: code:addons/asterisk_dialer/models/dialer.py:565
+#: field:asterisk.dialer.cdr,start_time:0
+#: field:asterisk.dialer.session,start_time:0
+#, python-format
+msgid "Started"
+msgstr "Начато"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/dialer.py:74
+#: code:addons/asterisk_dialer/models/dialer.py:482
+#: view:asterisk.dialer:asterisk_dialer.dialer_view_tree
+#: field:asterisk.dialer.session,state:0
+#, python-format
+msgid "State"
+msgstr "Состояние"
+
+#. module: asterisk_dialer
+#: view:asterisk.dialer.cdr:asterisk_dialer.dialer_stats_tree
+msgid "Statistics"
+msgstr "Статистика"
+
+#. module: asterisk_dialer
+#: model:ir.ui.menu,name:asterisk_dialer.asterisk_dialer_cdr
+msgid "Stats"
+msgstr "Статистика"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/dialer.py:564
+#: view:asterisk.dialer.cdr:asterisk_dialer.dialer_stats_search
+#: field:asterisk.dialer.cdr,status:0
+#, python-format
+msgid "Status"
+msgstr "Статус"
+
+#. module: asterisk_dialer
+#: view:asterisk.dialer.subscriber.list:asterisk_dialer.dialer_subscriber_list_tree
+msgid "Subscriber Lists"
+msgstr "Списки Абонентов"
+
+#. module: asterisk_dialer
+#: field:asterisk.dialer.subscriber,subscriber_list:0
+msgid "Subscriber list"
+msgstr "Список абонентов"
+
+#. module: asterisk_dialer
+#: model:ir.ui.menu,name:asterisk_dialer.asterisk_dialer_subscriber_list
+msgid "Subscriber lists"
+msgstr "Списки абонентов"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/dialer.py:619
+#: field:asterisk.dialer.subscriber,name:0
+#, python-format
+msgid "Subscriber name"
+msgstr "Имя абонента"
+
+#. module: asterisk_dialer
+#: view:asterisk.dialer.subscriber:asterisk_dialer.dialer_subscribers_tree
+#: field:asterisk.dialer.subscriber.list,subscribers:0
+#: model:ir.ui.menu,name:asterisk_dialer.asterisk_dialer_subscribers
+msgid "Subscribers"
+msgstr "Абоненты"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/dialer.py:601
+#: view:asterisk.dialer.subscriber.list:asterisk_dialer.dialer_subscriber_list_tree
+#, python-format
+msgid "Subscribers count"
+msgstr "Число абонентов"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/dialer.py:34
+#, python-format
+msgid "Subscribers list"
+msgstr "Список абонентов"
+
+#. module: asterisk_dialer
+#: view:asterisk.dialer.subscriber:asterisk_dialer.asterisk_dialer_subscriber_search
+msgid "Subscribers search"
+msgstr "Поиск по абонентам"
+
+#. module: asterisk_dialer
+#: field:asterisk.dialer,message_summary:0
+msgid "Summary"
+msgstr "Итого"
+
+#. module: asterisk_dialer
+#: view:asterisk.dialer:asterisk_dialer.dialer_view_form
+msgid "Time constraints"
+msgstr "Временные ограничения"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/dialer.py:85
+#: help:asterisk.dialer,to_time:0
+#, python-format
+msgid ""
+"Time perimitted for calling. If dialer is running it will be paused this time"
+msgstr ""
+"Разрешенное время для звонков, если Обзвонщик работает, он будет "
+"приостановлен в это время."
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/dialer.py:83
+#: help:asterisk.dialer,from_time:0
+#, python-format
+msgid ""
+"Time permitted for calling If dialer is paused it will be resumed this time."
+msgstr ""
+"Разрешенное время для звонков, если Обзвонщик приостановлен, то он снова "
+"будет запущен в это время."
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/dialer.py:84
+#: field:asterisk.dialer,to_time:0
+#, python-format
+msgid "To time"
+msgstr "Остановить в"
+
+#. module: asterisk_dialer
+#: view:asterisk.dialer.cdr:asterisk_dialer.dialer_stats_search
+msgid "Today"
+msgstr "Сегодня"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/dialer.py:485
+#: field:asterisk.dialer.session,total:0
+#, python-format
+msgid "Total"
+msgstr "Всего"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/dialer.py:72
+#: field:asterisk.dialer,dialer_type:0
+#, python-format
+msgid "Type"
+msgstr "Тип"
+
+#. module: asterisk_dialer
+#: field:asterisk.dialer,message_unread:0
+msgid "Unread Messages"
+msgstr "Unread Messages"
+
+#. module: asterisk_dialer
+#. openerp-web
+#: code:addons/asterisk_dialer/static/src/xml/soundfile.xml:48
+#, python-format
+msgid "Uploading ..."
+msgstr "Загружаю ..."
+
+#. module: asterisk_dialer
+#: field:asterisk.dialer.soundfile,version:0
+msgid "Version"
+msgstr "Версия"
+
+#. module: asterisk_dialer
+#: code:addons/asterisk_dialer/models/dialer.py:107
+#, python-format
+msgid "You have nobody to dial. Add contacts first :-)"
+msgstr "Некому звонить. Надо сперва добавить пару контактов :-)"
+
+#. module: asterisk_dialer
+#: view:asterisk.server.settings:asterisk_dialer.view_asterisk_server_settings
+msgid ""
+"allowed_origins = *\n"
+"[username]\n"
+"type = user\n"
+"read_only = no\n"
+"password = $6$GPX.W2HVNvy9Bo$EeHySUu89U8."
+"Wg6BvJCWNv51bDhu82t8gNz1u5n83MH1qWK282G2zV4V4neFldBRNb.nVchmRq28EGFTYl4QH.\n"
+"password_format = crypt"
+msgstr ""
+"allowed_origins = *\n"
+"[username]\n"
+"type = user\n"
+"read_only = no\n"
+"password = $6$GPX.W2HVNvy9Bo$EeHySUu89U8."
+"Wg6BvJCWNv51bDhu82t8gNz1u5n83MH1qWK282G2zV4V4neFldBRNb.nVchmRq28EGFTYl4QH.\n"
+"password_format = crypt"

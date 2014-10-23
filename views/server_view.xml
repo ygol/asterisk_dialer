@@ -14,11 +14,15 @@
                     </header>
                     <separator string="ARI Connection Information"/>
                     <group name="Server">
-                        <label for="id" string="Asterisk HTTP server URL"/>
+                        <label for="id" string="Asterisk HTTP server info"/>
                         <div>
-                            <div>
-                                <field name="ari_url" class='oe_inline'/>
-                                <label for="name" string='Usually http://localhost:8088, see http.conf.'/>
+                            <div>                                
+                                <field name="ip_addr" class='oe_inline'/>
+                                <label for="ip_addr"/>
+                            </div>
+                            <div>                                
+                                <field name="http_port" class='oe_inline'/>
+                                <label for="http_port"/>
                             </div>
                         </div>
                     </group>                    
@@ -36,7 +40,7 @@ password_format = crypt
 
                     <group name="ARI">
                         <label for="id" string="ARI access"/>
-                        <div>
+                        <div>                            
                             <div>
                                 <field name="ari_user" class='oe_inline'/>
                                 <label for="ari_user"/>

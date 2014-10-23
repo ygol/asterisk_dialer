@@ -2,7 +2,7 @@ from openerp import http
 from openerp.http import request
 from openerp import SUPERUSER_ID
 from datetime import datetime
-
+from werkzeug.exceptions import Forbidden
 
 class dialer(http.Controller):
     
@@ -12,6 +12,13 @@ class dialer(http.Controller):
         This function is used to track originated calls not connected to Stasis app.
         All unsuccessful calls get here. Answered calls are handled in Stasis app.
         """
+        
+        # Check IP address of Asterisk server
+        asterisk_server_obj = request.registry.get('asterisk.server.settings')
+        asterisk_server = asterisk_server_obj.browse(request.cr, SUPERUSER_ID, [1], context=request.context)
+        if not asterisk_server or request.httprequest.remote_addr != asterisk_server.ip_addr:
+            raise Forbidden('Not from Asterisk server!')
+            
         dialer_channel_obj = request.registry.get('asterisk.dialer.channel')
         cdr_obj = request.registry.get('asterisk.dialer.cdr')
         dialer_obj = request.registry('asterisk.dialer')
@@ -19,6 +26,7 @@ class dialer(http.Controller):
         dialer = None
         dialer_session = None
         dialer_channel = None
+        request.cr.autocommit(True)
         
         dialer_channel_id = dialer_channel_obj.search(request.cr, SUPERUSER_ID, 
             [('other_channel_id', '=', '%s' % channel_id)],
@@ -36,6 +44,7 @@ class dialer(http.Controller):
             # Remove channel
             dialer_channel_obj.unlink(request.cr, SUPERUSER_ID, dialer_channel.id, 
                 context=request.context)
+            request.cr.commit()
                 
         # Update cdr
         cdr_id = cdr_obj.search(request.cr, SUPERUSER_ID,
@@ -46,7 +55,6 @@ class dialer(http.Controller):
             cdr.write({'status': '%s' % status, 
                         'end_time': datetime.now(),
                         'answered_time': answered_time,
-                        'state': 'done',
                     })
             request.cr.commit()
             return 'OK'

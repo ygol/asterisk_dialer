@@ -3,22 +3,19 @@ from openerp import fields, models, api, _
 class server_settings(models.Model):
     _name = 'asterisk.server.settings'
 
-    ari_url = fields.Char(required=True, string=_('Server URL'))
-    ari_user = fields.Char(required=True, string=_('ARI username'))
-    ari_pass = fields.Char(required=True, string=_('ARI password'))
-    context_name = fields.Char(required=True, string=_('Dialplan context'))
+    ip_addr = fields.Char(required=True, string=_('Asterisk server IP adress, not hostname'),
+        default='127.0.0.1')
+    http_port = fields.Char(required=True, string=_('Asterisk server HTTP port'),
+        default='8088')
+    ari_user = fields.Char(required=True, string=_('ARI username'), default='')
+    ari_pass = fields.Char(required=True, string=_('ARI password'), default='')
+    context_name = fields.Char(required=True, string=_('Dialplan context'),
+        default='dialer')
     
-
-    _defaults = {
-        'ari_url': 'http://localhost:8088',
-        'context_name': 'dialer',
-        'ari_user': '',
-        'ari_pass': '',
-    }
     
     @api.one
     def execute(self):
-        print self.ari_url, self.ari_user
+        pass
         
         
     @api.one

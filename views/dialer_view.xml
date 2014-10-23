@@ -5,6 +5,7 @@
         <field name='name'>Dialer Stats</field>
         <field name='view_mode'>tree,form,graph</field>
         <field name='res_model'>asterisk.dialer.cdr</field>
+        <field name='context'>{'search_default_today': 1, 'search_default_by_dialer':1, 'search_default_by_session':1 }</field>
     </record>    
     
     <record id='dialer_view_form' model='ir.ui.view'>
@@ -19,13 +20,13 @@
                     <field name='pause_request' invisible='1' string='Pause'/>
                     <field name='cancel_request' invisible='1' string='Cancel'/>
                     <field name="state" invisible='1'/>    
-                    <button class='oe_highlight oe_read_only' name='start' type='object' string='Start' attrs="{'invisible': [('active_session_state','=','running')]}"/>
+                    <button class='oe_highlight oe_read_only' name='start' type='object' string='Start' attrs="{'invisible': ['|', ('active_session_state','=','running'),('active_session_state','=','paused')]}"/>
                     <button class='oe_highlight oe_read_only' name='pause' type='object' string='Pause' 
                         attrs="{'invisible': ['|','|',('cancel_request','=',True),('pause_request','=',True),('active_session_state','!=','running')]}"/>
                     <button class='oe_read_only' name='cancel' type='object' string='Cancel' 
                         attrs="{'invisible': ['|','|',('pause_request','=',True),('cancel_request','=',True),('active_session_state','!=', 'running')]}"/>
-                    <button class='oe_read_only' name='reset' type='object' string='Reset'/>
                     <button class='oe_highlight oe_read_only' name='resume' type='object' string='Resume' attrs="{'invisible': [('active_session_state','!=', 'paused')]}"/>
+                    <button class='oe_read_only' name='reset' type='object' string='Reset'/>
                     <div class='oe_form_box_info oe_center' attrs="{'invisible': [('cancel_request','!=',True)]}">
                         <p><strong>Cancelling in  progress. Please wait for current session to terminate...</strong></p>
                     </div>
@@ -54,7 +55,7 @@
                             <field name='sound_file'  attrs="{'invisible': [('dialer_type','!=','playback')]}"/>
                             <field name='dialer_model'/>
                             <field name="dialer_domain" widget="char_domain" placeholder="Select subscribers" 
-                                options="{'model_field': 'dialer_model'}"/>
+                                options="{'model_field': 'dialer_model'}" context="{'search_default_has_phone': 1}"/>
                             <field name='simult'/>
                         </group>
                         <group string='Time constraints'>
@@ -75,7 +76,7 @@
                             <field name="sessions" nolabel='1'>
                                 <tree edit="false" create="false" delete='false'>
                                     <field name='state'/>
-                                    <field name='progress' widget='progressbar'/>
+                                    <field name='progress' widget='progressbar' string='Progress'/>
                                     <field name='total'/>
                                     <field name='sent'/>
                                     <field name='answer'/>
@@ -104,7 +105,7 @@
         <field name='arch' type='xml'>
             <tree string='Dialers'>
                 <field name='name'/>
-                <field name='state'/>
+                <field name='state' string='State'/>
             </tree>
         </field>
     </record>
@@ -125,17 +126,19 @@ exten => _X.,1,Queue(test)</code></pre>
     </record>
     
     
-    <record id='session_view_tree' model='ir.ui.view'>
-        <field name='name'>Session Tree</field>
+    <record id='session_view_form' model='ir.ui.view'>
+        <field name='name'>Session Form</field>
         <field name='model'>asterisk.dialer.session</field>
         <field name='type'>form</field>
         <field name='arch' type='xml'>
-            <form string='Sessions'>
+            <form string='Session'>
                 <sheet>
                     <group>
                         <group>
                             <field name='state'/>
-                            <field name='progress' widget='progressbar'/>
+                            <field name='start_time'/>
+                            <field name='end_time'/>
+                            <field name='progress' widget='progressbar' string='Progress'/>
                             <field name='total'/>
                             <field name='sent'/>
                             <field name='answer'/>
@@ -144,7 +147,7 @@ exten => _X.,1,Queue(test)</code></pre>
                             <field name='busy'/>
                             <field name='congestion'/>
                             <field name='noanswer'/>
-                            <field name='chanunavail'/>
+                            <field name='chanunavail'/>string='Progress
                             <field name='cancel_request'/>
                             <field name='pause_request'/>
                         </group>
@@ -169,7 +172,7 @@ exten => _X.,1,Queue(test)</code></pre>
     </record>    
     -->
     
-    <!--
+    
     <record id='dialer_subscriber_list_tree' model='ir.ui.view'>
         <field name='name'>Dialer Subscriber List Tree</field>
         <field name='model'>asterisk.dialer.subscriber.list</field>
@@ -177,7 +180,7 @@ exten => _X.,1,Queue(test)</code></pre>
         <field name='arch' type='xml'>
             <tree string='Subscriber Lists' editable='top'>
                 <field name='name'/>
-                <field name='subscriber_count' readonly='1'/>
+                <field name='subscriber_count' readonly='1' string='Subscribers count'/>
             </tree>
         </field>
     </record>
@@ -187,9 +190,8 @@ exten => _X.,1,Queue(test)</code></pre>
         <field name='view_mode'>tree,form</field>
         <field name='res_model'>asterisk.dialer.subscriber.list</field>
     </record>    
-    <menuitem id='asterisk_dialer_subscriber_list' name='Subscriber List' parent='asterisk_dialer' action='dialer_subscriber_list'/>
+    <menuitem id='asterisk_dialer_subscriber_list' name='Subscriber lists' parent='asterisk_dialer' action='dialer_subscriber_list'/>
     
-
 
     <record id='dialer_subscribers_tree' model='ir.ui.view'>
         <field name='name'>Dialer Subscribers</field>
@@ -197,10 +199,23 @@ exten => _X.,1,Queue(test)</code></pre>
         <field name='type'>tree</field>
         <field name='arch' type='xml'>
             <tree string='Subscribers' editable='top'>
-                <field name='name'/>
-                <field name='phone'/>
                 <field name='subscriber_list'/>
+                <field name='phone'/>
+                <field name='name'/>
             </tree>
+        </field>
+    </record>
+    
+    <record id='asterisk_dialer_subscriber_search' model='ir.ui.view'>
+        <field name='name'>Subscriber Search</field>
+        <field name='model'>asterisk.dialer.subscriber</field>
+        <field name='type'>search</field>
+        <field name='arch' type='xml'>
+            <search string='Subscribers search'>
+                <group string='Group by'>
+                    <filter string='List' context="{'group_by': 'subscriber_list'}"/>
+                </group>
+            </search>
         </field>
     </record>
 
@@ -211,13 +226,11 @@ exten => _X.,1,Queue(test)</code></pre>
     </record>    
     <menuitem id='asterisk_dialer_subscribers' name='Subscribers' parent='asterisk_dialer' action='dialer_subscribers'/>
 
-  -->
-
 
     <record id='dialer_stats_tree' model='ir.ui.view'>
-        <field name='name'>Dialer Stats</field>
+        <field name='name'>Dialer Statistics</field>
         <field name='model'>asterisk.dialer.cdr</field>
-        <field name='type'>tree</field>
+        <field name='type'>tree</field>        
         <field name='arch' type='xml'>
             <tree string='Statistics'>
                 <field name='name'/>
@@ -225,7 +238,7 @@ exten => _X.,1,Queue(test)</code></pre>
                 <field name='status'/>
                 <field name='start_time'/>
                 <field name='end_time'/>
-                <field name='answered_time_str'/>
+                <field name='answered_time_str' string='Answer time'/>
                 <field name='answered_time' sum='1'/>
             </tree>
         </field>
@@ -238,7 +251,7 @@ exten => _X.,1,Queue(test)</code></pre>
         <field name='arch' type='xml'>
             <search string='Search Stats'>
                 <group string='Date'>
-                    <filter icon="terp-project" string='Today' 
+                    <filter name='today' icon="terp-project" string='Today' 
                         domain="[('start_time','&gt;=',time.strftime('%Y-%m-%d 00:00:00')),('start_time','&lt;=',time.strftime('%Y-%m-%d 23:59:59'))]"/>
                 </group>
                 <group string='Status'>
@@ -250,8 +263,8 @@ exten => _X.,1,Queue(test)</code></pre>
                     <filter string='Cancel' domain="[('status','=','CANCEL')]"/>
                 </group>
                 <group string='Group by'>
-                    <filter string='Dialer' context="{'group_by': 'dialer'}"/>
-                    <filter string='Session' context="{'group_by': 'session'}"/>
+                    <filter name='by_dialer' string='Dialer' context="{'group_by': 'dialer'}"/>
+                    <filter name='by_session' string='Session' context="{'group_by': 'session'}"/>
                     <filter string='Status' context="{'group_by': 'status'}"/>
                 </group>
             </search>

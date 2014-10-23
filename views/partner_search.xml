@@ -1,0 +1,17 @@
+<openerp>
+<data>
+
+    <record id='search_partner_with_phone' model='ir.ui.view'>
+        <field name='name'>Partner search with phone</field>
+        <field name='model'>res.partner</field>
+        <field name='type'>search</field>
+        <field name='inherit_id' ref='base.view_res_partner_filter'/>
+        <field name='arch' type='xml'>
+            <filter name='supplier' position='after'>
+                <filter string="Available for calling" name="has_phone" domain="[('phone','!=',False)]"/>
+            </filter>
+        </field>
+    </record>
+
+</data>
+</openerp>
