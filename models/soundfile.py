@@ -20,6 +20,8 @@ class SoundFile(models.Model):
     @api.one
     def get_full_path(self):
         sound_dir = os.path.join(tools.config.filestore(self.env.cr.dbname), 'sounds')
+        if not os.path.isdir(sound_dir):
+            os.mkdir(sound_dir)
         filename = os.path.join(sound_dir, self.datas_fname)
         return filename.encode('utf-8')
 
