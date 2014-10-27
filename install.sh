@@ -35,7 +35,7 @@ pip install requests
 pip install pyPdf
 pip install wkhtmltopdf
 pip install passlib
-
+pip install ari
 
 # Download Odoo
 wget -c http://github.com/litnimax/odoo/archive/8.0.zip
@@ -61,7 +61,7 @@ db_user = openerp
 dbfilter = .*
 debug_mode = False
 log_level = warn
-logfile = /var/log/odoo/odoo-server.log
+logfile = `pwd`/odoo-server.log
 no-logrotate = True
 without-demo=all
 no-xmlrpc = True
@@ -72,4 +72,4 @@ EOF
 
 cd odoo
 
-echo 'You can try to run Odoo with: ./odoo.py -c odoo.conf'
+echo 'You can try to run Odoo from this dir ./odoo.py -c odoo.conf'
