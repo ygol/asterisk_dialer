@@ -231,14 +231,45 @@ exten => _X.,1,Queue(test)</code></pre>
         <field name='type'>tree</field>        
         <field name='arch' type='xml'>
             <tree string='Statistics'>
-                <field name='name'/>
                 <field name='phone'/>
+                <field name='name'/>                
                 <field name='status'/>
                 <field name='start_time'/>
                 <field name='end_time'/>
                 <field name='answered_time_str' string='Answer time'/>
                 <field name='answered_time' sum='1'/>
             </tree>
+        </field>
+    </record>
+    
+   <record id='dialer_stats_form' model='ir.ui.view'>
+        <field name='name'>Call Detail Record</field>
+        <field name='model'>asterisk.dialer.cdr</field>
+        <field name='type'>form</field>        
+        <field name='arch' type='xml'>
+            <form string='Statistics' create='0' edit='0' delete='0'>
+            <sheet>
+            <group>
+             <group>
+                <field name='dialer'/>
+                <field name='session'/>
+                <field name='phone'/>
+                <field name='name'/>
+                <field name='status'/>
+                <field name='start_time'/>
+                <field name='end_time'/>
+                <field name='answered_time_str' string='Answer time'/>                
+             </group>
+             <group>
+                <field name='channel_id'/>
+                <field name='other_channel_id'/>
+                <field name='playback_start_time'/>
+                <field name='playback_end_time'/>
+                <field name='playback_duration_str'/>
+             </group>
+            </group>
+            </sheet>
+            </form>
         </field>
     </record>
     

@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: Odoo Server 8.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2014-10-22 11:05+0000\n"
-"PO-Revision-Date: 2014-10-22 15:08+0300\n"
+"PO-Revision-Date: 2014-11-03 00:19+0300\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -98,7 +98,7 @@ msgstr "Длительность, секунд"
 #: view:asterisk.dialer.cdr:asterisk_dialer.dialer_stats_tree
 #, python-format
 msgid "Answer time"
-msgstr "Время ответа"
+msgstr "Длительность разговора"
 
 #. module: asterisk_dialer
 #: code:addons/asterisk_dialer/models/dialer.py:487
