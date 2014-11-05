@@ -106,6 +106,19 @@ Odoo saves sound files in a folder set by data_dir option. Check that Asterisk c
 ### Enable debug mode
 Run Odoo with ''--log-level=debug'' and see errors.
 
+### Asterisk func curl not found
+```
+[Nov  5 11:13:25] ERROR[18838][C-000005e2]: pbx.c:4291 ast_func_read: Function CURL not registered
+```
+Install libcurl-devel, re-run ./configure and make menuselect, get sure res_curl and func_curl are selected and recompile and install these modules.
+
+### Outdated python requests lib
+```
+File "/usr/local/lib/python2.7/dist-packages/swaggerpy/http_client.py", line 121, in __init__ self.auth = requests.auth.HTTPBasicAuth(username, password) 
+AttributeError: 'module' object has no attribute 'HTTPBasicAuth'
+```
+python-requests package may be outdated. You may need to uninstall it and install a fresh one from python package repo (pip install requests).
+
 
 ## Feature requests 
 The following features could be implemented if requested:
