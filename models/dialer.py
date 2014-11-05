@@ -429,13 +429,6 @@ class dialer(models.Model):
         dialer_worker = threading.Thread(target=run_dialer, name='Run dialer thread')
         dialer_worker.start()   
  
-        
-    @api.one
-    def reset(self):
-        if self.active_session:            
-            self.active_session.state = 'cancelled'
-            self.env.cr.commit()
-        
     
     @api.one
     def cancel(self):
