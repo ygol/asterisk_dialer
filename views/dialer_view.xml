@@ -6,8 +6,49 @@
         <field name='view_mode'>tree,form,graph</field>
         <field name='res_model'>asterisk.dialer.cdr</field>
         <field name='context'>{'search_default_today': 1, 'search_default_by_dialer':1, 'search_default_by_session':1 }</field>
-    </record>    
+    </record>
+    <record id='dialer_cdr_nopreset' model='ir.actions.act_window'>
+        <field name='name'>Dialer Stats</field>
+        <field name='view_mode'>tree,form,graph</field>
+        <field name='res_model'>asterisk.dialer.cdr</field>        
+    </record>  
     
+    
+    <!-- Channels -->
+    <record id='dialer_channel_tree' model='ir.ui.view'>
+        <field name='name'>Dialer Channels</field>
+        <field name='model'>asterisk.dialer.channel</field>
+        <field name='arch' type='xml'>
+            <tree create='0' edit='0'>
+                <field name='phone'/>
+                <field name='name'/>
+                <field name='start_time'/>
+                <field name='channel_id'/>
+                <field name='other_channel_id'/>
+            </tree>
+        </field>
+    </record>
+    
+    <record id='dialer_channel_search' model='ir.ui.view'>
+        <field name='name'>Dialer Channel Search</field>
+        <field name='model'>asterisk.dialer.channel</field>
+        <field name='arch' type='xml'>
+            <search>
+                <field name='dialer'/>                
+            </search>
+        </field>
+    </record>
+
+
+    <record id='dialer_channel_action' model='ir.actions.act_window'>
+        <field name='name'>Dialer Channels</field>
+        <field name='res_model'>asterisk.dialer.channel</field>
+        <field name='view_mode'>tree</field>
+    </record>
+
+
+    
+    <!-- Dialer -->
     <record id='dialer_view_form' model='ir.ui.view'>
         <field name='name'>Dialer Form</field>
         <field name='model'>asterisk.dialer</field>
@@ -34,45 +75,39 @@
                     </div>                    
                 </header>                
                 <sheet>
-                    <div class='oe_title oe_left'>
-                            <h1>
-                                <field name='name'/> 
-                            </h1>
-                           
-                    </div>
-                    <div class='oe_button_box oe_right'>
-                            <button class="oe_inline oe_stat_button" type="action" name="%(dialer_cdr)d" icon="fa-phone" 
-                                    context="{'search_default_dialer_id': active_id}">
+                    <div class='oe_button_box oe_right'>                            
+                            <button class="oe_stat_button" type="action" name="%(dialer_channel_action)d" icon="fa-phone"
+                                    context="{'search_default_dialer': active_id}">
+                                <field name='channel_count' string='Current channels ' widget='statinfo'/>
+                            </button>
+                            <button class="oe_stat_button" type="action" name="%(dialer_cdr_nopreset)d" icon="fa-list" 
+                                    context="{'search_default_dialer': active_id, 'search_default_by_session': 1}">
                                 <field string="Call Statistics" name="cdr_count" widget="statinfo"/>
                             </button>
                     </div>
-
+                    <div class='oe_left'>
+                        <label for='name' class='oe_edit_only'/>
+                        <h1><field name='name'/></h1>
+                    </div>
                     <group>
                         <group> 
                             <field name='dialer_type'/>
                             <field name='context_name' attrs="{'invisible': [('dialer_type','=','playback')]}"/>
-                            <field name='sound_file'  attrs="{'invisible': [('dialer_type','!=','playback')]}"/>
-                            <field name='dialer_model'/>
-                            <field name="dialer_domain" widget="char_domain" placeholder="Select subscribers" 
-                                options="{'model_field': 'dialer_model'}" context="{'search_default_has_phone': 1}"/>
+                            <field name='sound_file'  attrs="{'invisible': [('dialer_type','!=','playback')]}"/>                            
+                            <field name='contacts' widget='many2many_tags'/>
                             <field name='simult'/>
                         </group>
+                        <!--
                         <group string='Time constraints'>
                             <field name='from_time' widget='float_time'/>
                             <field name='to_time' widget='float_time'/>
                         </group>
+                        -->
                     </group>
 
-                    <group string='Current calls'>
-                            <field name="channels" nolabel='1'>
-                                <tree edit="false" create="false" delete='true'>
-                                    <field name="name"/>
-                                    <field name="phone"/>
-                                </tree>
-                            </field>
-                    </group>
+                    
                     <group string='Sessions'>
-                            <field name="sessions" nolabel='1'>
+                            <field name="sessions" nolabel='1' context="{'form_view_ref':None}">
                                 <tree edit="false" create="false" delete='false'>
                                     <field name='state'/>
                                     <field name='progress' widget='progressbar' string='Progress'/>
@@ -101,8 +136,9 @@
         <field name='type'>tree</field>
         <field name='arch' type='xml'>
             <tree string='Dialers'>
-                <field name='name'/>
                 <field name='state' string='State'/>
+                <field name='name'/>
+                <field name='contacts'/>
             </tree>
         </field>
     </record>
@@ -168,59 +204,120 @@ exten => _X.,1,Queue(test)</code></pre>
         <field name='res_model'>asterisk.dialer.session</field>
     </record>    
     -->
-    
-    
-    <record id='dialer_subscriber_list_tree' model='ir.ui.view'>
-        <field name='name'>Dialer Subscriber List Tree</field>
-        <field name='model'>asterisk.dialer.subscriber.list</field>
+
+    <record id='dialer_contacts_action' model='ir.actions.act_window'>
+        <field name='name'>Dialer Contacts</field>
+        <field name='view_mode'>tree,form</field>
+        <field name='res_model'>asterisk.dialer.contacts</field>
+    </record>    
+
+    <record id='dialer_contacts_tree' model='ir.ui.view'>
+        <field name='name'>Dialer Contacts Tree</field>
+        <field name='model'>asterisk.dialer.contacts</field>
         <field name='type'>tree</field>
         <field name='arch' type='xml'>
-            <tree string='Subscriber Lists' editable='top'>
+            <tree string='Contacts to dial'>
                 <field name='name'/>
-                <field name='subscriber_count' readonly='1' string='Subscribers count'/>
+                <field name='model'/>
+                <field name='total_count'/>
             </tree>
         </field>
     </record>
+    
+    <record id='dialer_contacts_form' model='ir.ui.view'>
+        <field name='name'>Dialer Contacts</field>
+        <field name='model'>asterisk.dialer.contacts</field>
+        <field name='type'>form</field>        
+        <field name='arch' type='xml'>
+            <form string='Contacts to dial'>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name='name'/>                            
+                            <field name='model'/>
+                            <field name='model_domain' widget='char_domain' options="{'model_field':'model'}"
+                                context="{'search_default_has_phone':'1'}"/>
+                            <field name='note'/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
 
-   <record id='dialer_subscriber_list' model='ir.actions.act_window'>
-        <field name='name'>Dialer Subscriber List</field>
+    
+    
+    <!-- Phone groups -->
+    <record id='dialer_phone_group_tree' model='ir.ui.view'>
+        <field name='name'>Phone  Group Tree</field>
+        <field name='model'>asterisk.dialer.phone.group</field>
+        <field name='type'>tree</field>
+        <field name='arch' type='xml'>
+            <tree string='Phone groups' editable='top'>
+                <field name='name'/>
+            </tree>
+        </field>
+    </record>
+    
+    <record id='dialer_phone_group_action' model='ir.actions.act_window'>
+        <field name='name'>Phone groups</field>
         <field name='view_mode'>tree,form</field>
-        <field name='res_model'>asterisk.dialer.subscriber.list</field>
+        <field name='res_model'>asterisk.dialer.phone.group</field>
     </record>    
     
-
-    <record id='dialer_subscribers_tree' model='ir.ui.view'>
-        <field name='name'>Dialer Subscribers</field>
-        <field name='model'>asterisk.dialer.subscriber</field>
+    <!-- Phones -->
+    <record id='dialer_phone_tree' model='ir.ui.view'>
+        <field name='name'>Dialer Phones</field>
+        <field name='model'>asterisk.dialer.phone</field>
         <field name='type'>tree</field>
         <field name='arch' type='xml'>
-            <tree string='Subscribers' editable='top'>
-                <field name='subscriber_list'/>
+            <tree string='Phones'>
                 <field name='phone'/>
                 <field name='name'/>
+                <field name='group_names'/>
             </tree>
         </field>
     </record>
     
-    <record id='asterisk_dialer_subscriber_search' model='ir.ui.view'>
-        <field name='name'>Subscriber Search</field>
-        <field name='model'>asterisk.dialer.subscriber</field>
+    <record id='dialer_phone_form' model='ir.ui.view'>
+        <field name='name'>Dialer Phone</field>
+        <field name='model'>asterisk.dialer.phone</field>
+        <field name='type'>form</field>
+        <field name='arch' type='xml'>
+            <form string='Phone'>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name='phone'/>
+                            <field name='name'/>
+                            <field name='groups' widget='many2many_tags'/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    
+   <record id='dialer_phone_action' model='ir.actions.act_window'>
+        <field name='name'>Phones</field>
+        <field name='view_mode'>tree,form</field>
+        <field name='res_model'>asterisk.dialer.phone</field>
+    </record>    
+
+
+    
+    <record id='asterisk_dialer_phone_search' model='ir.ui.view'>
+        <field name='name'>Phone Search</field>
+        <field name='model'>asterisk.dialer.phone</field>
         <field name='type'>search</field>
         <field name='arch' type='xml'>
-            <search string='Subscribers search'>
+            <search string='Phone search'>
                 <group string='Group by'>
-                    <filter string='List' context="{'group_by': 'subscriber_list'}"/>
+                    <filter string='Group' context="{'group_by': 'group_names'}"/>
                 </group>
             </search>
         </field>
     </record>
-
-   <record id='dialer_subscribers' model='ir.actions.act_window'>
-        <field name='name'>Dialer Subscribers</field>
-        <field name='view_mode'>tree,form</field>
-        <field name='res_model'>asterisk.dialer.subscriber</field>
-    </record>    
-
 
     <record id='dialer_stats_tree' model='ir.ui.view'>
         <field name='name'>Dialer Statistics</field>
@@ -276,6 +373,8 @@ exten => _X.,1,Queue(test)</code></pre>
         <field name='type'>search</field>
         <field name='arch' type='xml'>
             <search string='Search Stats'>
+                <field name='dialer'/>
+                <field name='session'/>
                 <group string='Date'>
                     <filter name='today' icon="terp-project" string='Today' 
                         domain="[('start_time','&gt;=',time.strftime('%Y-%m-%d 00:00:00')),('start_time','&lt;=',time.strftime('%Y-%m-%d 23:59:59'))]"/>
@@ -291,7 +390,10 @@ exten => _X.,1,Queue(test)</code></pre>
                 <group string='Group by'>
                     <filter name='by_dialer' string='Dialer' context="{'group_by': 'dialer'}"/>
                     <filter name='by_session' string='Session' context="{'group_by': 'session'}"/>
-                    <filter string='Status' context="{'group_by': 'status'}"/>
+                    <filter name='by_status' string='Status' context="{'group_by': 'status'}"/>
+                    <filter name='by_day' string="Day" context="{'group_by':'start_time:day'}" help="Group by day of date"/>
+                    <filter name='by_month' string="Month" context="{'group_by':'start_time:month'}" help="Group by month of date"/>
+                    <filter name='by_year' string="Year" context="{'group_by':'start_time:year'}" help="Group by year of date"/>
                 </group>
             </search>
         </field>
@@ -336,8 +438,9 @@ exten => _X.,1,Queue(test)</code></pre>
     <menuitem id='asterisk_topmenu' name='Asterisk'/>
     <menuitem id='asterisk_dialer' name='Dialer' parent='asterisk_topmenu'/>
     <menuitem id='asterisk_dialer_dialer' name='Dialer' parent='asterisk_dialer' action='dialer'/>
+    <menuitem id='asterisk_dialer_contacts_menu' name='Contacts' parent='asterisk_dialer' action='dialer_contacts_action'/>
+    <menuitem id='asterisk_dialer_phone_group_menu' name='Phone groups' parent='asterisk_dialer' action='dialer_phone_group_action'/>
+    <menuitem id='asterisk_dialer_phone_menu' name='Phones' parent='asterisk_dialer' action='dialer_phone_action'/>
     <menuitem id='asterisk_dialer_cdr' name='Stats' parent='asterisk_dialer' action='dialer_cdr'/>
-    <menuitem id='asterisk_dialer_subscriber_list' name='Subscriber lists' parent='asterisk_dialer' action='dialer_subscriber_list'/>
-    <menuitem id='asterisk_dialer_subscribers' name='Subscribers' parent='asterisk_dialer' action='dialer_subscribers'/>
 
 </data></openerp>

@@ -1,8 +1,12 @@
+import logging
 from openerp import http
 from openerp.http import request
 from openerp import SUPERUSER_ID
 from datetime import datetime
 from werkzeug.exceptions import Forbidden
+import threading
+
+_logger = logging.getLogger(__name__)
 
 class dialer(http.Controller):
     
@@ -21,10 +25,6 @@ class dialer(http.Controller):
             
         dialer_channel_obj = request.registry.get('asterisk.dialer.channel')
         cdr_obj = request.registry.get('asterisk.dialer.cdr')
-        dialer_obj = request.registry('asterisk.dialer')
-        dialer_session_obj = request.registry('asterisk.dialer.session')
-        dialer = None
-        dialer_session = None
         dialer_channel = None
         request.cr.autocommit(True)
         
@@ -57,6 +57,14 @@ class dialer(http.Controller):
                         'answered_time': answered_time,
                     })
             request.cr.commit()
+
+            # Notify origination thread to place next call! 
+            for t in threading.enumerate():
+                if t.name == 'OriginationThread-%s' % cdr.dialer.id and t.is_alive():
+                    _logger.debug('FOUND ALIVE THREAD. GO NEXT CALL!')
+                    t.go_next_call.set()
+                    break
+            # 
             return 'OK'
         else:
             return 'NOT FOUND'
