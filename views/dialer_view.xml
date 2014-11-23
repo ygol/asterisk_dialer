@@ -23,8 +23,9 @@
                 <field name='phone'/>
                 <field name='name'/>
                 <field name='start_time'/>
-                <field name='channel_id'/>
-                <field name='other_channel_id'/>
+                <field name='duration'/>
+                <field name='channel_id'/>                
+                <button type='object' name='hangup_call' string='Hangup'/> 
             </tree>
         </field>
     </record>
@@ -60,19 +61,45 @@
                     <field name='active_session_state' invisible='1'/>
                     <field name='pause_request' invisible='1' string='Pause'/>
                     <field name='cancel_request' invisible='1' string='Cancel'/>
-                    <field name="state" invisible='1'/>    
-                    <button class='oe_highlight oe_read_only' name='start' type='object' string='Start' attrs="{'invisible': ['|', ('active_session_state','=','running'),('active_session_state','=','paused')]}"/>
-                    <button class='oe_highlight oe_read_only' name='pause' type='object' string='Pause' 
-                        attrs="{'invisible': ['|','|',('cancel_request','=',True),('pause_request','=',True),('active_session_state','!=','running')]}"/>
-                    <button class='oe_read_only' name='cancel' type='object' string='Cancel' 
-                        attrs="{'invisible': ['|','|',('pause_request','=',True),('cancel_request','=',True),('active_session_state','!=', 'running')]}"/>
-                    <button class='oe_highlight oe_read_only' name='resume' type='object' string='Resume' attrs="{'invisible': [('active_session_state','!=', 'paused')]}"/>                
-                    <div class='oe_form_box_info oe_center' attrs="{'invisible': [('cancel_request','!=',True)]}">
-                        <p><strong>Cancelling in  progress. Please wait for current session to terminate...</strong></p>
-                    </div>
+                    <field name="state" invisible='1'/>
+                    <field name='is_origination_thread_alive' invisible='1'/>
+                    <!--
+                    running -> pause, cancel
+                    paused -> resume, cancel
+                    done ->  start
+                    error -> resume,  cancel
+                    cancelled -> start
+                    -->            
+                    <button class='oe_highlight' name='resume' type='object' string='Resume' attrs="{'invisible': ['|','|',
+                            ('pause_request', '=', True),
+                            ('cancel_request', '=', True),
+                            ('active_session_state','not in', ['paused', 'error'])]}"/>
+
+                    <button class='oe_highlight' name='pause' type='object' string='Pause' attrs="{'invisible': ['|','|',
+                            ('cancel_request','=',True),
+                            ('pause_request','=',True),
+                            ('active_session_state','!=','running')]}"/>
+
+                    <button class='oe_highlight' name='start' type='object' string='Start' attrs="{'invisible': 
+                            [('active_session','!=', False)]}"/> 
+
+                    <button name='cancel' type='object' string='Cancel' attrs="{'invisible': ['|', '|', 
+                            ('cancel_request','=',True),
+                            ('pause_request','=',True),
+                            ('active_session_state','not in', ['running','paused','error', ''])]}"/>         
+                    
                     <div class='oe_form_box_info oe_center' attrs="{'invisible': [('pause_request','!=',True)]}">
-                        <p><strong>Pause in  progress. Please wait for current session to terminate...</strong></p>
-                    </div>                    
+                            <p>
+                                <strong>Pause in  progress. Please wait for active calls to be completed...</strong>
+                                <button type="action" name="%(dialer_channel_action)d"  string='Manage hang calls' 
+                                        context="{'search_default_dialer': active_id}"/>
+                            </p>                            
+                    </div>
+
+                    <div class='oe_form_box_info oe_center' attrs="{'invisible': [('cancel_request','!=',True)]}">
+-                        <p><strong>Cancelling in  progress. Hanging up active calls...</strong></p>
+-                   </div>
+
                 </header>                
                 <sheet>
                     <div class='oe_button_box oe_right'>                            
@@ -96,6 +123,7 @@
                             <field name='sound_file'  attrs="{'invisible': [('dialer_type','!=','playback')]}"/>                            
                             <field name='contacts' widget='many2many_tags'/>
                             <field name='simult'/>
+                            <!-- <field name='attempts'/> -->
                         </group>
                         <!--
                         <group string='Time constraints'>
@@ -118,6 +146,7 @@
                                     <field name='congestion'/>
                                     <field name='noanswer'/>
                                     <field name='chanunavail'/>
+                                    <field name='cancel'/>
                                 </tree>
                             </field>
                     </group>                                    
@@ -180,15 +209,17 @@ exten => _X.,1,Queue(test)</code></pre>
                             <field name='busy'/>
                             <field name='congestion'/>
                             <field name='noanswer'/>
-                            <field name='chanunavail'/>string='Progress
+                            <field name='chanunavail'/>
+                            <field name='cancel'/>
                             <field name='cancel_request'/>
                             <field name='pause_request'/>
                         </group>
                     </group>
                     <field name='cdrs'>
                         <tree create='false' delete='false' edit='false' nolabel='1'>
-                            <field name='phone'/>
+                            <field name='phone'/>                            
                             <field name='name'/>
+                            <field name='start_time'/>
                             <field name='status'/>
                         </tree>
                     </field>
