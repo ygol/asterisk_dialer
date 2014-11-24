@@ -785,3 +785,14 @@ class queue(models.Model):
     phone = fields.Char(string=_('Phone number'), required=True, select=0)
     name = fields.Char(string=_('Person name'), select=0)
     
+
+"""
+class provider(models.Model):
+    _name = 'asterisk.dialer.provider'
+    _rec_name = 'peer_name'
+
+    prefix = fields.Char(required=True, default='[0-9]+')
+    simult = fields.Integer(required=True, default=1)
+    note = fields.Text()
+
+"""

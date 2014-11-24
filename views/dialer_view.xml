@@ -121,7 +121,7 @@
                             <field name='dialer_type'/>
                             <field name='context_name' attrs="{'invisible': [('dialer_type','=','playback')]}"/>
                             <field name='sound_file'  attrs="{'invisible': [('dialer_type','!=','playback')]}"/>                            
-                            <field name='contacts' widget='many2many_tags'/>
+                            <field name='contacts' widget='many2many_tags' string='Dial Groups'/>
                             <field name='simult'/>
                             <!-- <field name='attempts'/> -->
                         </group>
@@ -237,17 +237,17 @@ exten => _X.,1,Queue(test)</code></pre>
     -->
 
     <record id='dialer_contacts_action' model='ir.actions.act_window'>
-        <field name='name'>Dialer Contacts</field>
+        <field name='name'>Dial Groups</field>
         <field name='view_mode'>tree,form</field>
         <field name='res_model'>asterisk.dialer.contacts</field>
     </record>    
 
     <record id='dialer_contacts_tree' model='ir.ui.view'>
-        <field name='name'>Dialer Contacts Tree</field>
+        <field name='name'>Dial Group Tree</field>
         <field name='model'>asterisk.dialer.contacts</field>
         <field name='type'>tree</field>
         <field name='arch' type='xml'>
-            <tree string='Contacts to dial'>
+            <tree string='Dial Groups'>
                 <field name='name'/>
                 <field name='model'/>
                 <field name='total_count'/>
@@ -256,11 +256,11 @@ exten => _X.,1,Queue(test)</code></pre>
     </record>
     
     <record id='dialer_contacts_form' model='ir.ui.view'>
-        <field name='name'>Dialer Contacts</field>
+        <field name='name'>Dial Group</field>
         <field name='model'>asterisk.dialer.contacts</field>
         <field name='type'>form</field>        
         <field name='arch' type='xml'>
-            <form string='Contacts to dial'>
+            <form string='Dial Group'>
                 <sheet>
                     <group>
                         <group>
@@ -469,7 +469,7 @@ exten => _X.,1,Queue(test)</code></pre>
     <menuitem id='asterisk_topmenu' name='Asterisk'/>
     <menuitem id='asterisk_dialer' name='Dialer' parent='asterisk_topmenu'/>
     <menuitem id='asterisk_dialer_dialer' name='Dialer' parent='asterisk_dialer' action='dialer'/>
-    <menuitem id='asterisk_dialer_contacts_menu' name='Contacts' parent='asterisk_dialer' action='dialer_contacts_action'/>
+    <menuitem id='asterisk_dialer_contacts_menu' name='Dial Groups' parent='asterisk_dialer' action='dialer_contacts_action'/>
     <menuitem id='asterisk_dialer_phone_group_menu' name='Phone groups' parent='asterisk_dialer' action='dialer_phone_group_action'/>
     <menuitem id='asterisk_dialer_phone_menu' name='Phones' parent='asterisk_dialer' action='dialer_phone_action'/>
     <menuitem id='asterisk_dialer_cdr' name='Stats' parent='asterisk_dialer' action='dialer_cdr'/>
