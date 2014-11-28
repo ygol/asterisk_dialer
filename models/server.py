@@ -9,8 +9,6 @@ class server_settings(models.Model):
         default='8088')
     ari_user = fields.Char(required=True, string=_('ARI username'), default='')
     ari_pass = fields.Char(required=True, string=_('ARI password'), default='')
-    context_name = fields.Char(required=True, string=_('Dialplan context'),
-        default='dialer')
     
     
     @api.one

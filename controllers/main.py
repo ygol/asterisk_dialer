@@ -28,24 +28,6 @@ class dialer(http.Controller):
         dialer_channel = None
         request.cr.autocommit(True)
         
-        dialer_channel_id = dialer_channel_obj.search(request.cr, SUPERUSER_ID, 
-            [('other_channel_id', '=', '%s' % channel_id)],
-            context=request.context)
-        dialer_channel = dialer_channel_obj.browse(request.cr, SUPERUSER_ID, dialer_channel_id, context=request.context)
-        if dialer_channel:
-            # Update session, some magic here as we have exact names like DIALSTATUS returns.
-            if status.lower() in dialer_channel.session.fields_get_keys():
-                request.cr.commit()
-                current = dialer_channel.session[status.lower()]
-                request.cr.commit()
-                dialer_channel.session[status.lower()] = current + 1
-                request.cr.commit()
-
-            # Remove channel
-            dialer_channel_obj.unlink(request.cr, SUPERUSER_ID, dialer_channel.id, 
-                context=request.context)
-            request.cr.commit()
-                
         # Update cdr
         cdr_id = cdr_obj.search(request.cr, SUPERUSER_ID,
                 [('other_channel_id','=','%s' % channel_id)],
@@ -64,7 +46,28 @@ class dialer(http.Controller):
                     _logger.debug('FOUND ALIVE THREAD. GO NEXT CALL!')
                     t.go_next_call.set()
                     break
-            # 
+        
+        # Remove channel
+        dialer_channel_id = dialer_channel_obj.search(request.cr, SUPERUSER_ID, 
+            [('other_channel_id', '=', '%s' % channel_id)],
+            context=request.context)
+        dialer_channel = dialer_channel_obj.browse(request.cr, SUPERUSER_ID, dialer_channel_id, context=request.context)
+        if dialer_channel:
+            # Update session, some magic here as we have exact names like DIALSTATUS returns.
+            if status.lower() in dialer_channel.session.fields_get_keys():
+                request.cr.commit()
+                current = dialer_channel.session[status.lower()]
+                request.cr.commit()
+                dialer_channel.session[status.lower()] = current + 1
+                request.cr.commit()
+
+            # Remove channel
+            dialer_channel_obj.unlink(request.cr, SUPERUSER_ID, dialer_channel.id, 
+                context=request.context)
+            request.cr.commit()
+                
+        # 
+        if cdr_id:
             return 'OK'
         else:
             return 'NOT FOUND'

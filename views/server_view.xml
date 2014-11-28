@@ -51,15 +51,6 @@ password_format = crypt
                             </div>
                         </div>                        
                     </group>                    
-                   <group name="Dialplan">
-                        <label for="id" string="Asterisk Dialplan for Dialer"/>
-                        <div>
-                            <div>
-                                <field name="context_name" class='oe_inline'/>
-                                <label for="context_name" string='Dialplan context name, see README for details'/>
-                            </div>
-                        </div>                        
-                    </group>                    
                 </form>
             </field>
         </record>

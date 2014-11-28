@@ -23,6 +23,7 @@
                 <field name='phone'/>
                 <field name='name'/>
                 <field name='start_time'/>
+                <field name='peer'/>
                 <field name='duration'/>
                 <field name='channel_id'/>                
                 <button type='object' name='hangup_call' string='Hangup'/> 
@@ -47,6 +48,108 @@
         <field name='view_mode'>tree</field>
     </record>
 
+    <!-- Peers  -->
+    <record id='dialer_peer_form' model='ir.ui.view'>
+        <field name='name'>Dialer Peer Form</field>
+        <field name='model'>asterisk.dialer.peer</field>
+        <field name='arch' type='xml'>
+            <form>
+                <sheet>                    
+                    <group>
+                        <group string='Context Settings'>                            
+                            <field name='name' placeholder='Dial context name'/>
+                            <field name='simult'/>
+                            <field name='note'/>
+                        </group>
+                        <group string='Used in Dialers Routes'>
+                            <field name='routes' nolabel='1' readonly='1'>
+                                <tree>
+                                    <field name='dialer'/>
+                                    <field name='pattern'/>
+                                </tree>
+                            </field>
+                        </group> 
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id='dialer_peer_tree' model='ir.ui.view'>
+        <field name='name'>Dialer Peer Tree</field>
+        <field name='model'>asterisk.dialer.peer</field>
+        <field name='arch' type='xml'>
+            <tree>
+                <field name='name'/>
+                <field name='simult'/>
+                <field name='note'/>
+            </tree>
+        </field>
+    </record>
+
+    <record id='dialer_peer_action' model='ir.actions.act_window'>
+        <field name='name'>Dial Contexts</field>
+        <field name='res_model'>asterisk.dialer.peer</field>
+        <field name='view_mode'>tree,form</field>
+        <field name='help' type='html'>
+            <p class='oe_view_nocontent_create'> Click to create a new dial context.</p>
+            <p>Currenly Dialer uses Asterisk Local channel to actually originate calls and update status for not connected calls. <br/>
+            So Context Name is a name of Asterisk context where calls are sent to SIP or DAHDI channels. This is a example dialplan: </p>
+            <pre><code>[dialer_hangup]
+exten => h,1,Set(res=${CURL(http://localhost:8069/dialer/channel_update/?channel_id=${UNIQUEID}&amp;status=${DIALSTATUS}&amp;answered_time=${ANSWEREDTIME})})
+exten => h,n,Verbose(ID: ${ID}${UNIQUEID} DIAL STATUS: ${DIALSTATUS} UPDATE RESULT: ${res})
+
+[landline]
+include => dialer_hangup
+exten => _X!,1,Dial(SIP/${EXTEN}@voip_peer,50,g)
+
+[gsm]
+include => dialer_hangup
+exten => _X!,1,Dial(SIP/${EXTEN}@gsm_peer,50,g)
+            </code></pre> 
+            <p>According to the above dial plan create 2 Dial Contexts here with name landline and gsm accordingly.</p>  
+        </field>
+    </record>
+
+    <!-- Routes -->
+    <record id='dialer_route_form' model='ir.ui.view'>
+        <field name='name'>Dialer Routes Form</field>
+        <field name='model'>asterisk.dialer.route</field>
+        <field name='arch' type='xml'>
+            <form>
+                <sheet>
+                    <field name='sequence' invisible='1'/>
+                    <group>
+                        <group>                            
+                            <field name='pattern' placeholder='digits or _ for any digit'/>
+                            <field name='peer'/>
+                        </group>
+                        <group>
+                        </group> 
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id='dialer_route_tree' model='ir.ui.view'>
+        <field name='name'>Dialer Routes Tree</field>
+        <field name='model'>asterisk.dialer.route</field>
+        <field name='arch' type='xml'>
+            <tree>
+                <field name='sequence' invisible='1'/>
+                <field name='pattern'/>
+                <field name='peer'/>
+            </tree>
+        </field>
+    </record>
+
+    <record id='dialer_routes_action' model='ir.actions.act_window'>
+        <field name='name'>Dialer Routes</field>
+        <field name='res_model'>asterisk.dialer.route</field>
+        <field name='view_mode'>tree,form</field>
+        <field name='domain'>[('dialer','=',active_id)]</field>
+    </record>
 
     
     <!-- Dialer -->
@@ -61,8 +164,7 @@
                     <field name='active_session_state' invisible='1'/>
                     <field name='pause_request' invisible='1' string='Pause'/>
                     <field name='cancel_request' invisible='1' string='Cancel'/>
-                    <field name="state" invisible='1'/>
-                    <field name='is_origination_thread_alive' invisible='1'/>
+                    <field name="state" invisible='1'/>                    
                     <!--
                     running -> pause, cancel
                     paused -> resume, cancel
@@ -70,25 +172,25 @@
                     error -> resume,  cancel
                     cancelled -> start
                     -->            
-                    <button class='oe_highlight' name='resume' type='object' string='Resume' attrs="{'invisible': ['|','|',
+                    <button class='oe_highlight oe_read_only' name='resume' type='object' string='Resume' attrs="{'invisible': ['|','|',
                             ('pause_request', '=', True),
                             ('cancel_request', '=', True),
                             ('active_session_state','not in', ['paused', 'error'])]}"/>
 
-                    <button class='oe_highlight' name='pause' type='object' string='Pause' attrs="{'invisible': ['|','|',
+                    <button class='oe_highlight oe_read_only' name='pause' type='object' string='Pause' attrs="{'invisible': ['|','|',
                             ('cancel_request','=',True),
                             ('pause_request','=',True),
                             ('active_session_state','!=','running')]}"/>
 
-                    <button class='oe_highlight' name='start' type='object' string='Start' attrs="{'invisible': 
+                    <button class='oe_highlight oe_read_only' name='start' type='object' string='Start' attrs="{'invisible': 
                             [('active_session','!=', False)]}"/> 
 
-                    <button name='cancel' type='object' string='Cancel' attrs="{'invisible': ['|', '|', 
+                    <button class='oe_read_only' name='cancel' type='object' string='Cancel' attrs="{'invisible': ['|', '|', 
                             ('cancel_request','=',True),
                             ('pause_request','=',True),
                             ('active_session_state','not in', ['running','paused','error', ''])]}"/>         
                     
-                    <div class='oe_form_box_info oe_center' attrs="{'invisible': [('pause_request','!=',True)]}">
+                    <div class='oe_form_box_info oe_center oe_read_only' attrs="{'invisible': [('pause_request','!=',True)]}">
                             <p>
                                 <strong>Pause in  progress. Please wait for active calls to be completed...</strong>
                                 <button type="action" name="%(dialer_channel_action)d"  string='Manage hang calls' 
@@ -96,20 +198,24 @@
                             </p>                            
                     </div>
 
-                    <div class='oe_form_box_info oe_center' attrs="{'invisible': [('cancel_request','!=',True)]}">
--                        <p><strong>Cancelling in  progress. Hanging up active calls...</strong></p>
--                   </div>
+                    <div class='oe_form_box_info oe_center oe_read_only' attrs="{'invisible': [('cancel_request','!=',True)]}">
+                        <p><strong>Cancelling in  progress. Hanging up active calls...</strong></p>
+                    </div>
 
                 </header>                
                 <sheet>
-                    <div class='oe_button_box oe_right'>                            
+                    <div class='oe_button_box oe_right'>
+                            <button class='oe_stat_button' name='%(dialer_routes_action)d' type='action' 
+                                    context="{'default_dialer': active_id}" icon='fa-random'>
+                                <field name='route_count' string='Routes' widget='statinfo'/>
+                            </button>                                                         
                             <button class="oe_stat_button" type="action" name="%(dialer_channel_action)d" icon="fa-phone"
                                     context="{'search_default_dialer': active_id}">
-                                <field name='channel_count' string='Current channels ' widget='statinfo'/>
+                                <field name='channel_count' string='Channels' widget='statinfo'/>
                             </button>
                             <button class="oe_stat_button" type="action" name="%(dialer_cdr_nopreset)d" icon="fa-list" 
                                     context="{'search_default_dialer': active_id, 'search_default_by_session': 1}">
-                                <field string="Call Statistics" name="cdr_count" widget="statinfo"/>
+                                <field string="Statistics" name="cdr_count" widget="statinfo"/>
                             </button>
                     </div>
                     <div class='oe_left'>
@@ -122,15 +228,10 @@
                             <field name='context_name' attrs="{'invisible': [('dialer_type','=','playback')]}"/>
                             <field name='sound_file'  attrs="{'invisible': [('dialer_type','!=','playback')]}"/>                            
                             <field name='contacts' widget='many2many_tags' string='Dial Groups'/>
-                            <field name='simult'/>
-                            <!-- <field name='attempts'/> -->
+                            <field name='contact_count'/>                            
+                        </group>                        
+                        <group>
                         </group>
-                        <!--
-                        <group string='Time constraints'>
-                            <field name='from_time' widget='float_time'/>
-                            <field name='to_time' widget='float_time'/>
-                        </group>
-                        -->
                     </group>
 
                     
@@ -178,12 +279,13 @@
         <field name='res_model'>asterisk.dialer</field>
         <field name='context'>{'mail_create_nolog': '1'}</field>
         <field name='help' type='html'>
-            <p class='oe_view_nocontent_create'>Click to create a new Dialer.</p>
-            <p>Dialer is used to dial Partners (dialer model is set to <i>Contacts</i>) or custom list of phone numbers (dialer model is set to <i>Subscribers list</i>).</p>
-            <p>After a call is answered Dialer can either playback a message (Dialer type is set to <i>Playback message</i>) or connect the call to Asterisk dialplan 
-            where system administrator can configure his custom dialplan like the following:</p>
+            <p class='oe_view_nocontent_create'>Click to create a new Dialer.</p>           
+            <p>If Dialer type is set to <i>Playback message</i> after call is answered Dialer will play a specidied message.</p>
+            <p>If Dialer type is set to Asterisk dialplan Asterisk will connect answered calls to specified Asterisk dialplan (context name).</p> 
+            <p>Here is an example of sending connected calls to Asterisk queue system:</p>
             <pre><code>[queue]
 exten => _X.,1,Queue(test)</code></pre>
+            <p>To make the above example work set type to <i>Asterisk dialpan</i> and set <i>Context name</i> to <i>queue</i>.</p>
         </field>
     </record>
     
@@ -220,6 +322,7 @@ exten => _X.,1,Queue(test)</code></pre>
                             <field name='phone'/>                            
                             <field name='name'/>
                             <field name='start_time'/>
+                            <field name='peer'/>
                             <field name='status'/>
                         </tree>
                     </field>
@@ -239,12 +342,12 @@ exten => _X.,1,Queue(test)</code></pre>
     <record id='dialer_contacts_action' model='ir.actions.act_window'>
         <field name='name'>Dial Groups</field>
         <field name='view_mode'>tree,form</field>
-        <field name='res_model'>asterisk.dialer.contacts</field>
+        <field name='res_model'>asterisk.dialer.contact</field>
     </record>    
 
     <record id='dialer_contacts_tree' model='ir.ui.view'>
         <field name='name'>Dial Group Tree</field>
-        <field name='model'>asterisk.dialer.contacts</field>
+        <field name='model'>asterisk.dialer.contact</field>
         <field name='type'>tree</field>
         <field name='arch' type='xml'>
             <tree string='Dial Groups'>
@@ -257,7 +360,7 @@ exten => _X.,1,Queue(test)</code></pre>
     
     <record id='dialer_contacts_form' model='ir.ui.view'>
         <field name='name'>Dial Group</field>
-        <field name='model'>asterisk.dialer.contacts</field>
+        <field name='model'>asterisk.dialer.contact</field>
         <field name='type'>form</field>        
         <field name='arch' type='xml'>
             <form string='Dial Group'>
@@ -267,7 +370,7 @@ exten => _X.,1,Queue(test)</code></pre>
                             <field name='name'/>                            
                             <field name='model'/>
                             <field name='model_domain' widget='char_domain' options="{'model_field':'model'}"
-                                context="{'search_default_has_phone':'1'}"/>
+                                context="{'search_default_has_phone':'1'}}"/>
                             <field name='note'/>
                         </group>
                     </group>
@@ -343,6 +446,7 @@ exten => _X.,1,Queue(test)</code></pre>
         <field name='type'>search</field>
         <field name='arch' type='xml'>
             <search string='Phone search'>
+                <field name='groups'/>
                 <group string='Group by'>
                     <filter string='Group' context="{'group_by': 'group_names'}"/>
                 </group>
@@ -359,6 +463,7 @@ exten => _X.,1,Queue(test)</code></pre>
                 <field name='phone'/>
                 <field name='name'/>                
                 <field name='status'/>
+                <field name='peer'/>
                 <field name='start_time'/>
                 <field name='end_time'/>
                 <field name='answered_time_str' string='Answer time'/>
@@ -381,6 +486,7 @@ exten => _X.,1,Queue(test)</code></pre>
                 <field name='phone'/>
                 <field name='name'/>
                 <field name='status'/>
+                <field name='peer'/>
                 <field name='start_time'/>
                 <field name='end_time'/>
                 <field name='answered_time_str' string='Answer time'/>                
@@ -405,7 +511,7 @@ exten => _X.,1,Queue(test)</code></pre>
         <field name='arch' type='xml'>
             <search string='Search Stats'>
                 <field name='dialer'/>
-                <field name='session'/>
+                <field name='peer'/>
                 <group string='Date'>
                     <filter name='today' icon="terp-project" string='Today' 
                         domain="[('start_time','&gt;=',time.strftime('%Y-%m-%d 00:00:00')),('start_time','&lt;=',time.strftime('%Y-%m-%d 23:59:59'))]"/>
@@ -415,13 +521,14 @@ exten => _X.,1,Queue(test)</code></pre>
                     <filter string='Busy' domain="[('status','=','BUSY')]"/>
                     <filter string='Congestion' domain="[('status','=','CONGESTION')]"/>
                     <filter string='No answer' domain="[('status','=','NOANSWER')]"/>
-                    <filter string='Channel unavailable' domain="[('status','=','CHANUNAVAIL')]"/>
+                    <filter string='Channel unavailable' domain="[('status','='Cance,'CHANUNAVAIL')]"/>
                     <filter string='Cancel' domain="[('status','=','CANCEL')]"/>
                 </group>
                 <group string='Group by'>
                     <filter name='by_dialer' string='Dialer' context="{'group_by': 'dialer'}"/>
                     <filter name='by_session' string='Session' context="{'group_by': 'session'}"/>
                     <filter name='by_status' string='Status' context="{'group_by': 'status'}"/>
+                    <filter name='by_peer' string='Peer' context="{'group_by': 'peer'}"/>
                     <filter name='by_day' string="Day" context="{'group_by':'start_time:day'}" help="Group by day of date"/>
                     <filter name='by_month' string="Month" context="{'group_by':'start_time:month'}" help="Group by month of date"/>
                     <filter name='by_year' string="Year" context="{'group_by':'start_time:year'}" help="Group by year of date"/>
@@ -463,15 +570,24 @@ exten => _X.,1,Queue(test)</code></pre>
                     <field name='status' type='col'/>
                 </graph>
             </field>
-        </record>        
+        </record>       
+
 
 
     <menuitem id='asterisk_topmenu' name='Asterisk'/>
     <menuitem id='asterisk_dialer' name='Dialer' parent='asterisk_topmenu'/>
-    <menuitem id='asterisk_dialer_dialer' name='Dialer' parent='asterisk_dialer' action='dialer'/>
-    <menuitem id='asterisk_dialer_contacts_menu' name='Dial Groups' parent='asterisk_dialer' action='dialer_contacts_action'/>
-    <menuitem id='asterisk_dialer_phone_group_menu' name='Phone groups' parent='asterisk_dialer' action='dialer_phone_group_action'/>
-    <menuitem id='asterisk_dialer_phone_menu' name='Phones' parent='asterisk_dialer' action='dialer_phone_action'/>
-    <menuitem id='asterisk_dialer_cdr' name='Stats' parent='asterisk_dialer' action='dialer_cdr'/>
+    <menuitem id='asterisk_dialer_dialer' name='Dialer' parent='asterisk_dialer'
+        action='dialer' sequence='10'/>
+    <menuitem id='asterisk_dialer_route_menu' name='Call Routing' 
+        parent='asterisk_dialer' action='dialer_peer_action'  sequence='20'/>
+    <menuitem id='asterisk_dialer_contacts_menu' name='Dial Groups' 
+        parent='asterisk_dialer' action='dialer_contacts_action'  sequence='30'/>
+    <menuitem id='asterisk_dialer_phone_group_menu' name='Phone groups' 
+        parent='asterisk_dialer' action='dialer_phone_group_action'  sequence='40'/>
+    <menuitem id='asterisk_dialer_phone_menu' name='Phones' sequence='50' 
+        parent='asterisk_dialer' action='dialer_phone_action'/>
+    <menuitem id='asterisk_dialer_cdr' name='Stats' parent='asterisk_dialer' 
+        action='dialer_cdr' sequence='60'/>
+    
 
 </data></openerp>

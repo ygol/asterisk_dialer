@@ -61,7 +61,7 @@
             <field name="search_view_id" ref="view_soundfile_search"/>
         </record>
         
-        <menuitem action="action_soundfile" id="menu_asterisk_dialer_sound_file" parent="asterisk_dialer"/>
+        <menuitem action="action_soundfile" id="menu_asterisk_dialer_sound_file" parent="asterisk_dialer" sequence='25'/>
 
     </data>
 </openerp>
