@@ -267,7 +267,7 @@ exten => _X.,1,Queue(test)</code></pre>
                             <field name='name'/>                            
                             <field name='model'/>
                             <field name='model_domain' widget='char_domain' options="{'model_field':'model'}"
-                                context="{'search_default_has_phone':'1'}"/>
+                                context="{'search_default_has_phone':'1', 'search_default_may_call': '1'}"/>
                             <field name='note'/>
                         </group>
                     </group>
