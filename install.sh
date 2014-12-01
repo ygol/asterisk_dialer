@@ -38,14 +38,14 @@ pip install passlib
 pip install ari
 
 # Download Odoo
-wget -c http://github.com/litnimax/odoo/archive/8.0.zip
-unzip 8.0.zip && mv odoo-8.0 odoo
+wget -c http://github.com/odoo/odoo/archive/8.0.zip
+unzip odoo-8.0.zip && mv odoo-8.0 odoo
 
 
 # Download asterisk dialer addon
 mkdir myaddons
-wget -c http://github.com/litnimax/odoo-asterisk-dialer/archive/master.zip
-unzip master.zip && mv odoo-asterisk-dialer-master myaddons/asterisk_dialer
+wget -c http://github.com/litnimax/asterisk_dialer/archive/master.zip
+unzip master.zip && mv asterisk_dialer-master myaddons/asterisk_dialer
 
 
 # Create a default Odoo config
@@ -60,8 +60,8 @@ db_password = openerp
 db_user = openerp
 dbfilter = .*
 debug_mode = False
-log_level = warn
-logfile = `pwd`/odoo-server.log
+log_level = info
+;logfile = `pwd`/odoo-server.log
 no-logrotate = True
 without-demo=all
 no-xmlrpc = True
