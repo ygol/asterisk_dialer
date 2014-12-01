@@ -47,24 +47,30 @@ class dialer(http.Controller):
                     t.go_next_call.set()
                     break
         
-        # Remove channel
+        # Get either 1-st channel leg or 2-nd.
         dialer_channel_id = dialer_channel_obj.search(request.cr, SUPERUSER_ID, 
-            [('other_channel_id', '=', '%s' % channel_id)],
-            context=request.context)
+                            ['|',
+                                ('other_channel_id', '=', '%s' % channel_id),
+                                ('channel_id', '=', '%s' % channel_id),
+                            ],
+                            context=request.context)
+
         dialer_channel = dialer_channel_obj.browse(request.cr, SUPERUSER_ID, dialer_channel_id, context=request.context)
         if dialer_channel:
             # Update session, some magic here as we have exact names like DIALSTATUS returns.
-            if status.lower() in dialer_channel.session.fields_get_keys():
-                request.cr.commit()
+            if status.lower() in dialer_channel.session.fields_get_keys():       
                 current = dialer_channel.session[status.lower()]
-                request.cr.commit()
                 dialer_channel.session[status.lower()] = current + 1
                 request.cr.commit()
+            else:
+                _logger.error('STATUS %s FOR CHANNEL %s NOT FOUND!' % (channel_id, status))
 
             # Remove channel
             dialer_channel_obj.unlink(request.cr, SUPERUSER_ID, dialer_channel.id, 
                 context=request.context)
             request.cr.commit()
+        else:
+            _logger.warn('NO DIALER CHANNEL FOUND, CALL HANGUP OR? CHANNEL: %s' % channel_id)
                 
         # 
         if cdr_id:
