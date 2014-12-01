@@ -409,7 +409,7 @@ exten => _X!,1,Dial(SIP/${EXTEN}@gsm_peer,50,g)
                             <field name='model'/>
                             <field name='model_domain' widget='char_domain' options="{'model_field':'model'}"
                                 context="{'search_default_has_phone':'1', 'search_default_may_call': '1'}"/>
-                            <field name='model_domain_ro' readonly='1'/>
+                            <field name='model_domain_ro' readonly='1' string='Current filter'/>
                             <field name='note'/>
                         </group>
                     </group>

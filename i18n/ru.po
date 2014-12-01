@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 8.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-12-01 19:28+0000\n"
-"PO-Revision-Date: 2014-12-01 21:29+0300\n"
+"POT-Creation-Date: 2014-12-01 21:00+0000\n"
+"PO-Revision-Date: 2014-12-01 23:01+0300\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -48,8 +48,8 @@ msgid ""
 "strong> accordingly.</p>  \n"
 "        "
 msgstr ""
-"<p class=\"oe_view_nocontent_create\">Нажмите сюда для создания нового "
-"Контекста Вызова</p>\n"
+"<p class=\"oe_view_nocontent_create\"> Click to create a new dial \n"
+"                context.</p>\n"
 "            <p>Currenly Dialer uses Asterisk Local channel to actually "
 "originate\n"
 "             calls and update status for not connected calls. </p>\n"
@@ -570,6 +570,11 @@ msgid "Current Calls"
 msgstr "Текущие Звонки"
 
 #. module: asterisk_dialer
+#: view:asterisk.dialer.contact:asterisk_dialer.dialer_contacts_form
+msgid "Current filter"
+msgstr "Текущий фильтр"
+
+#. module: asterisk_dialer
 #: view:asterisk.dialer.cdr:asterisk_dialer.dialer_stats_search
 msgid "Date"
 msgstr "Дата"
@@ -941,7 +946,7 @@ msgstr "Номера"
 #: selection:asterisk.dialer,dialer_type:0
 #, python-format
 msgid "Odoo Stasis App"
-msgstr "Odoo Stasis App"
+msgstr "Stasis Приложение"
 
 #. module: asterisk_dialer
 #: field:asterisk.dialer.channel,other_channel_id:0
