@@ -1,7 +1,8 @@
 {
     'name' : 'Asterisk Dialer',
     'description': '',
-    'version' : '1.0',
+    'summary': 'Telemarketing, Partners, Phone lists, Statistics',
+    'version' : '1.1',
     'depends' : ['base', 'mail', 'web',],
     'author' : 'litnimax',
     'website' : '',
@@ -21,4 +22,5 @@
     'qweb': ['static/src/xml/*.xml'], 
     'auto_install': False,
     'installable': True,
+    'application': True,
 }

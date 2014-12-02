@@ -1,27 +1,32 @@
-odoo-asterisk-dialer
+Odoo Telemarketing Application
 ====================
 
-Asterisk dialer for Odoo. 
+[Asterisk IP-PBX](http://asterisk.org) based dialer for [Odoo](http://odoo.com). 
 
-**Alpha release - expect bugs! **
+## Introduction
+This application is used to manage telemarketing campaigns e.g. call customers and playback a pre-recorded voice message or connect answered calls to operators. Other use cases are also possible as new features can be easily implemented using custom Asterisk dial plan.
 
-## Installation
-* Install [**my fork**](https://github.com/litnimax/odoo/) of Odoo 8.0. There is a bug in char_domain widget not yet fixed by the Odoo team so for now pls stick to mine. 
- * Checkout my Odoo 8.0:  ```git clone -b 8.0 https://github.com/litnimax/odoo.git odoo```
- * Or you can you [my install.sh](https://github.com/litnimax/odoo-asterisk-dialer/blob/master/install.sh) script to install Odoo & Asterisk dialer into virtual env in current directory.
+This application uses Asterisk RESTful Interface (ARI) and requires **Asterisk v12** and newer. It is implemented inside Odoo using Python threads and does not have separate software components.
 
+## Software requirements and installation
+Requirements:
+
+* [ari-py](https://github.com/asterisk/ari-py) (pip install ari)
+* [Odoo 8.0](https://github.com/odoo/odoo/tree/8.0/)
+* Asterisk v.12/13 with func_curl enabled.
+
+Installation:
+
+* Install Odoo 8.0.
+* Download asterisk_dialer from here and put it in your Odoo's addons folder. Or you can you my [install.sh](https://github.com/litnimax/odoo-asterisk-dialer/blob/master/install.sh) script to install Odoo & Asterisk dialer into virtual env in current directory.
 * Install latest Asterisk. Versions < 12 do not have ARI support. 
 * Install Asterisk ARI libs (pip install ari).
-* Install odoo_asterisk_dialer module. Download from Github (using git clone or Download zip), rename folder to asterisk_dialer. Put this folder in your addons path (
-see addons_path in Odoo configuration file (create initial one with ./odoo -s, CTRL+C and take it  from ~/.openerp_serverrc) or use an example configuration provided below.
 
-
-
-## Documentation
+## Configuration
 
 ### Odoo configuration
-In Odoo you should set ''data_dir'' option.
-We use it as a root folder for storing uploaded sound files.
+In Odoo you should set **data_dir** option.
+It is used as a root folder for storing uploaded voice files.
 Be sure this folder is accessible for UID which is asterisk running under.
 
 #### Example configuration file
@@ -38,23 +43,9 @@ debug_mode = False
 log_level = info
 logfile = False
 ```
+You can generate default Odoo configuration by running <code>./odoo -s</code>. It will create a default ~/.openerp_serverrc file in home directory.
 
 ### Asterisk settings
-
-#### Dialplan
-
-Dialer operates using ARI originate request. 
-It connects each call to Asterisk dialplan with the following contents:
-
-```
-[dialer]
-exten => _X.,1,Dial(SIP/${EXTEN}@peer_name,30,A(silence/2)); wait 2 sec for RTP to align.
-exten => h,1,Set(res=${CURL(http://localhost:8069/dialer/channel_update/?channel_id=${UNIQUEID}&status=${DIALSTATUS}&answered_time=${ANSWEREDTIME})})
-```
-
-So you must add the above snippet to your extensions.conf. Replace *peer_name* with your provider's peer from sip.conf and *localhost:8069* with your Odoo instance URL.
-
-Also set your own peer_name to provider's peer from  your sip.conf :-)
 
 #### ARI settings
 ARI is configured in ari.conf. Example of configuration:
@@ -73,13 +64,43 @@ Remember it will be transfered over the network in plain text and if Asterisk is
 
 Imagine a phone bill for $40,000 for calls to Inmarsat because Asterisk ARI access is sniffed.
 
+#### Dialplan
+
+Dialer operates using ARI originate method and Local channel. Due to Aterisk limitation to return call status of non-connected calls we have to use Local channel and its context to actually send call to provider and use <code>h</code> exten to update call status. Here is an example of such a dial plan: 
+
+
+```
+[peer-1]
+include => dialer_hangup
+exten => _X!,1,Dial(SIP/${EXTEN}@peer-1,60,g)
+
+[peer-2]
+include => dialer_hangup
+exten => _X!,1,Dial(SIP/${EXTEN}@peer-2,60,g)
+
+[e1]
+include => dialer_hangup
+exten => _X!,1,Dial(DAHDI/g0/${EXTEN},60,g)
+
+[dialer_hangup]
+exten => h,1,Set(res=${CURL(http://localhost:8069/dialer/channel_update/?channel_id=${UNIQUEID}&status=${DIALSTATUS}&answered_time=${ANSWEREDTIME})})
+;
+;exten => h,n,Verbose(CALL ID: ${UNIQUEID}, DIAL STATUS: ${DIALSTATUS}, UPDATE RESULT: ${res})
+
+```
+
+So you must add the above snippet to your extensions.conf. Replace *peers* with your provider's peer from sip.conf and *localhost:8069* with your Odoo instance URL.
+
+When creating Call Routing in Odoo Dialer Application name Dial Context exactly like Asterisk context name. 
+
+
 ### Running Dialer
 Dialer operates in 2 modes (dialer type setting):
 
 * Asterisk dialplan
-* Playback message
+* Odoo Stasis app
 
-#### Asterisk dialplan
+#### Asterisk Dialplan
 When dialer type is set to *Playback* the Dialer originates calls and puts connected calls in specified Asterisk context name.
 
 For example if instead of message playback we need to put every connected call in queue, the following dialplan must be created in extensions.conf:
@@ -90,21 +111,22 @@ exten => _X.,1,Queue(test)
 ```
 In Dialer configuration field *Context name* must be set to *queue*.
 
-#### Playback message
-In this mode Dialer plays uploaded sound file to called person.
+#### Stasis App
+In this mode Dialer plays uploaded sound file to called number.
 
-## Managing Subscribers lists 
-Dialer can dial either Contacts (Partners) or custom list of subscribers (phone numbers).
-This lists can be imported from .csv files.
+## Number Lists 
+The Dialer can dial either Contacts (Partners) or custom list of phone numbers. This lists can be imported from .csv files.
 
-If .csv file has only one column with phone numbers, thay are *added to the last subcriber list created*.
-If it has 2 columns (1st - for phonenumbers, 2nd - for subscriber list name) subscribers will be imported in the list specified.
+
 
 ## Troubleshooting
+Enable debug mode.  
+
+Run Odoo with ''--log-level=debug'' and see errors.
+
 ### Playback file is not played
 Odoo saves sound files in a folder set by data_dir option. Check that Asterisk can read from there.
-### Enable debug mode
-Run Odoo with ''--log-level=debug'' and see errors.
+
 
 ### Asterisk func curl not found
 ```
@@ -112,12 +134,21 @@ Run Odoo with ''--log-level=debug'' and see errors.
 ```
 Install libcurl-devel, re-run ./configure and make menuselect, get sure res_curl and func_curl are selected and recompile and install these modules.
 
+### Asterisk permission issue
+If you see something like that:
+```
+[Nov 23 16:54:57] WARNING[18025]: file.c:758 ast_openstream_full: File /home/openerp/.local/share/Odoo/filestore/odoo_production/sounds/01 does not exist in any format
+[Nov 23 16:54:57] WARNING[18025]: file.c:1077 ast_streamfile: Unable to open /home/openerp/.local/share/Odoo/filestore/odoo_production/sounds/01 (format (slin)): Permission denied
+[Nov 23 16:54:57] WARNING[18025]: res_stasis_playback.c:248 playback_final_update: a781d96a-7320-11e4-9f00-040108bd4001-1416754481-1: Playback failed for sound:/home/openerp/.local/share/Odoo/filestore/odoo_production/sounds/01
+```
+Make sounds folder accessible for Asterisk.
+
 ### Outdated python requests lib
 ```
 File "/usr/local/lib/python2.7/dist-packages/swaggerpy/http_client.py", line 121, in __init__ self.auth = requests.auth.HTTPBasicAuth(username, password) 
 AttributeError: 'module' object has no attribute 'HTTPBasicAuth'
 ```
-python-requests package may be outdated. You may need to uninstall it and install a fresh one from python package repo (pip install requests).
+python-requests package may be outdated. You may need to uninstall it and install a fresh one from python package repo (pip install requests --update).
 
 
 ## Feature requests 
@@ -128,4 +159,5 @@ The following features could be implemented if requested:
 * Record dialed person choice in menu.
 * Other.
 
-To create a feature request [create](https://github.com/litnimax/odoo-asterisk-dialer/issues/new) a Github issue with label 'enhancement'.
+To create a feature request [create](https://github.com/litnimax/asterisk_dialer/issues/new) a Github issue with label
+*enhancement*.

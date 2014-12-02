@@ -53,15 +53,25 @@
         </record>
 
         <record id="action_soundfile" model="ir.actions.act_window">
-            <field name="name">Sound files</field>
+            <field name="name">Sound Files</field>
             <field name="type">ir.actions.act_window</field>
             <field name="res_model">asterisk.dialer.soundfile</field>
             <field name="view_type">form</field>
             <field name="view_id" eval="False"/>
             <field name="search_view_id" ref="view_soundfile_search"/>
+            <field name='help' type='html'>
+                <p class='oe_view_nocontent_create'>Click here to add a new 
+                    <i>Sound File</i></p>
+                <p>Only .wav format is supported.</p>
+                <p>Give your descriptive name (e.g. Hello world!) to that file, 
+                    click <i>Select</i> and then <i>Save</i>.
+                </p><p>The file will be uploaded and stored in a folder set by 
+                <i>data_dir</i> option in Odoo configuration file. Make sure 
+                Asterisk has read permission to that folder.</p>
+            </field>
         </record>
         
-        <menuitem action="action_soundfile" id="menu_asterisk_dialer_sound_file" parent="asterisk_dialer"/>
+        <menuitem action="action_soundfile" id="menu_asterisk_dialer_sound_file" parent="asterisk_dialer" sequence='25'/>
 
     </data>
 </openerp>
