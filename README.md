@@ -6,7 +6,9 @@ Odoo Telemarketing Application
 ## Introduction
 This application is used to manage telemarketing campaigns e.g. call customers and playback a pre-recorded voice message or connect answered calls to operators. Other use cases are also possible as new features can be easily implemented using custom Asterisk dial plan.
 
-This application uses Asterisk RESTful Interface (ARI) and requires **Asterisk v12** and newer. It is implemented inside Odoo using Python threads and does not have separate software components.
+This application uses Asterisk RESTful Interface (ARI) and requires **Asterisk v12** and newer. It is implemented inside Odoo using Python threads and does not have separate software components. 
+
+*That's why You have to run Odoo in threaded mode devoted to one database disabling **workers** option and settings **dbfilter** option in Odoo configuration (see example of confoguration file below).*
 
 ## Software requirements and installation
 Requirements:
@@ -38,12 +40,15 @@ data_dir = /home/max/tmp-work/odoo/filestore
 db_host = localhost
 db_password = openerp
 db_user = openerp
-dbfilter = .*
+dbfilter = ^odoo_dialer$
 debug_mode = False
 log_level = info
 logfile = False
+workers = 0
 ```
 You can generate default Odoo configuration by running <code>./odoo -s</code>. It will create a default ~/.openerp_serverrc file in home directory.
+
+**Warning!** Make sure You set up correct *dbfilter* option and also disabled workers by settings it to zero.
 
 ### Asterisk settings
 
@@ -133,6 +138,32 @@ Odoo saves sound files in a folder set by data_dir option. Check that Asterisk c
 [Nov  5 11:13:25] ERROR[18838][C-000005e2]: pbx.c:4291 ast_func_read: Function CURL not registered
 ```
 Install libcurl-devel, re-run ./configure and make menuselect, get sure res_curl and func_curl are selected and recompile and install these modules.
+
+### Channel update script Not Found error
+This is how this error looks in Odoo's log: 
+```
+2014-12-10 13:49:04,158 12709 INFO None openerp.http: Generating nondb routing
+2014-12-10 13:49:04,298 12709 INFO None werkzeug: 127.0.0.1 - - [10/Dec/2014 13:49:04] "GET /dialer/channel_update/?channel_id=fe405e90-7fa8-11e4-bab0-70f395e579e2-1418132452-2&status=CHANUNAVAIL&answered_time=0 HTTP/1.1" 404 -
+
+```
+"Nondb routing" means there is either no database or more then one database available for selection. You have to check dbfilter option to be set correctly.
+
+And this is how this error looks like in Asterisk console:
+```
+    -- Executing [h@e1:1] Set("Local/102@e1-00000001;2", "res=<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+    -- <title>404 Not Found</title>
+    -- <h1>Not Found</h1>
+    -- <p>The requested URL was not found on the server.  If you entered the URL manually please check your spelling and try again.</p>") in new stack
+    -- Executing [h@e1:2] Verbose("Local/102@e1-00000001;2", "ID: f0e054c8-8073-11e4-bcc6-70f395e579e2-1418219617-2 DIAL STATUS: CHANUNAVAIL UPDATE RESULT: <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+    -- <title>404 Not Found</title>
+    -- <h1>Not Found</h1>
+    -- <p>The requested URL was not found on the server.  If you entered the URL manually please check your spelling and try again.</p>") in new stack
+ID: f0e054c8-8073-11e4-bcc6-70f395e579e2-1418219617-2 DIAL STATUS: CHANUNAVAIL UPDATE RESULT: <!DOCTYPE HTML PUBLIC -//W3C//DTD HTML 3.2 Final//EN>
+<title>404 Not Found</title>
+<h1>Not Found</h1>
+<p>The requested URL was not found on the server.  If you entered the URL manually please check your spelling and try again.</p>
+
+```
 
 ### Asterisk permission issue
 If you see something like that:
