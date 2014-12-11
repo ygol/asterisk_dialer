@@ -156,6 +156,10 @@ class StasisThread(AriOdooSessionThread):
             t.start()
 
         # Run
+        if self.dialer.dialer_type != 'stasis':
+            _logger.debug('STASIS APP NOT STARTING.')
+            return
+
         with api.Environment.manage():
 
             try:
