@@ -8,7 +8,7 @@ This application is used to manage telemarketing campaigns e.g. call customers a
 
 This application uses Asterisk RESTful Interface (ARI) and requires **Asterisk v12** and newer. It is implemented inside Odoo using Python threads and does not have separate software components. 
 
-*That's why You have to run Odoo in threaded mode devoted to one database disabling **workers** option and settings **dbfilter** option in Odoo configuration (see example of confoguration file below).*
+That's why You have to run Odoo in threaded mode devoted to one database disabling **workers** option and settings **dbfilter** option in Odoo configuration (see example of confoguration file below).
 
 ## Software requirements and installation
 Requirements:
