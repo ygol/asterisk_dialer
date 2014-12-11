@@ -32,16 +32,19 @@ def format_exception():
 
 class AriOdooSessionThread(threading.Thread):
 
-    def __init__(self, name, dbname, uid, session_id):
+    def __init__(self, name, dialer):
         super(AriOdooSessionThread, self).__init__()
-        self.setName(name)
-        # Init Environment
+        dbname = dialer.env.cr.dbname
+        uid = dialer.env.uid
+        # Init new Env
         self.cursor = sql_db.db_connect(dbname).cursor()
         self.env = api.Environment(self.cursor, uid, {})
         self.env.cr.autocommit(True)
-        self.session = self.env['asterisk.dialer.session'].browse([session_id])
-        self.dialer = self.session.dialer
-
+        # Init objects with new Env
+        self.dialer = self.env['asterisk.dialer'].browse([dialer.id])
+        self.session = self.env['asterisk.dialer.session'].browse(
+            [dialer.active_session.id])
+        self.setName('%s-%s' % (name, self.dialer.id))
         # Init ARI
         server = self.env['asterisk.server.settings'].browse([1])
         # Get rid of unicode as ari-py does not handle it.
@@ -51,7 +54,8 @@ class AriOdooSessionThread(threading.Thread):
         self.ari_url = ari_url
         self.ari_user = ari_user
         self.ari_pass = ari_pass
-        self.ari_client = ari.connect(ari_url, ari_user, ari_pass)
+        # We'll initialize connection to ARI on run.
+        self.ari_client = None
 
     def get_channel_count(self):
         channel_count = None
@@ -155,6 +159,8 @@ class StasisThread(AriOdooSessionThread):
         with api.Environment.manage():
 
             try:
+                self.ari_client = ari.connect(
+                    self.ari_url, self.ari_user, self.ari_pass)
                 self.sound_file = os.path.splitext(
                     self.dialer.sound_file.get_full_path()[0])[0]
                 self.ari_client.on_channel_event('StasisStart', stasis_start)
@@ -166,15 +172,23 @@ class StasisThread(AriOdooSessionThread):
                     self.dialer.id,
                     self.session.id))
 
-            except (ConnectionError, WebSocketConnectionClosedException), e:
+            except (ConnectionError, WebSocketConnectionClosedException) as e:
                 # Asterisk crash or restart?
-                self.origination_thread.stasis_app_error.set()
-                _logger.debug('STASIS: WebSocketConnectionClosedException '
-                              '- exiting Srasis thread.')
+                # Try to get OriginationThread
+                for thread in threading.enumerate():
+                    if (thread.name == 'OriginationThread-%s' % self.dialer.id
+                            and thread.is_alive()):
+                        _logger.debug(
+                            'SETTINGS stasis_app_error IN ORIGINATION THREAD.')
+                        thread.stasis_app_error.set()
+
+                _logger.debug(
+                    'STASIS: WebSocketConnectionClosedException '
+                    '- exiting Stasis thread.')
                 _logger.debug(format_exception())
                 return
 
-            except Exception, e:
+            except Exception as e:
                 # on ari_client.close() we are here :-) Ugly :-)
                 if (hasattr(e, 'args') and
                         type(e.args) in (list, tuple) and
@@ -291,7 +305,10 @@ class OriginationThread(AriOdooSessionThread):
         with api.Environment.manage():
 
             try:
-
+                # Connect to ARI before starting thread.
+                self.ari_client = ari.connect(self.ari_url,
+                                              self.ari_user,
+                                              self.ari_pass)
                 while True:
                     try:
                         # Paranoid but sometimes it does not see changes!
@@ -501,11 +518,7 @@ class dialer(models.Model):
     def _get_channel_count(self):
         self.channel_count = len(self.channels)
 
-    @api.one
-    def start(self):
-        if self.active_session_state == 'running':
-            return
-        # Validations before start
+    def validate_start(self):
         if not self.contacts:
             raise ValidationError(
                 _('You have nobody to dial. Add contacts first :-)'))
@@ -521,7 +534,8 @@ class dialer(models.Model):
         for dst in xrange(0, 10):
             self.env.cr.execute("""SELECT peer FROM asterisk_dialer_route
                     WHERE dialer=%s AND '%s%s' like CONCAT(pattern,'%%')
-                    """ % (self.id, dst, dst))
+                    """ % (self.id, dst, dst)
+            )
             peers = self.env.cr.dictfetchall()
             if not peers:
                 invalid_destinations.append(str(dst))
@@ -531,12 +545,14 @@ class dialer(models.Model):
                 _("No routes for destinations: %s") % ', '.join(
                     invalid_destinations))
 
-        # Get / create active session
+    def prepare_session(self):
+        """
+        Create or re-use existing session
+        """
         session = self.active_session
-
+        self.env.cr.autocommit(False)
         if not session:
             _logger.debug('NO INTERRUPTED SESSION, CREATING ONE.')
-            self.env.cr.autocommit(False)
             session = self.env['asterisk.dialer.session'].create(
                 {'dialer': self.id})
             self.active_session = session
@@ -549,47 +565,37 @@ class dialer(models.Model):
                         'phone': contact.phone,
                         'name': contact.name,
                         'dialer': self.id,
-                        
                         'session': session.id,
                         'status': 'queue',
                     })
                     total_count += 1
             session.total = total_count
-            self.env.cr.commit()
-            self.env.cr.autocommit(True)
+
+        else:
+            # Queue session's unproccessed calls
+            session.cdrs.search([('status', '=', 'process')]).write(
+                {'status': 'queue'})
+
+        self.env.cr.commit()
+        self.env.cr.autocommit(True)
 
         session.state = 'running'
         # Reset channels
         self.channels.unlink()
 
-        # Init threads
-        stasis_thread = origination_thread = None
-        try:
-            origination_thread = OriginationThread(
-                'OriginationThread-%s' % self.id,
-                self.env.cr.dbname,
-                self.env.uid, session.id)
+    @api.one
+    def start(self):
+        if self.active_session_state == 'running':
+            return
+        self.validate_start()
+        self.prepare_session()
 
-            if self.dialer_type == 'stasis':
-                stasis_thread = StasisThread(
-                    'StasisThread-%s' % self.id,
-                    self.env.cr.dbname, self.env.uid,
-                    session.id)
-                stasis_thread.origination_thread = origination_thread
-                origination_thread.stasis_thread = stasis_thread
-
-        except (HTTPError, ConnectionError):
-            del stasis_thread
-            del origination_thread
-            session.state = 'error'
-            raise ValidationError(
-                _('Cannot connect to Asterisk. Check that '
-                  'Asterisk is running and ARI settings are valid.'))
+        self.origination_thread = OriginationThread('OriginationThread', self)
+        self.stasis_thread = StasisThread('StasisThread', self)
 
         # Start threads
-        if stasis_thread:
-            stasis_thread.start()
-        origination_thread.start()
+        self.stasis_thread.start()
+        self.origination_thread.start()
 
     @api.one
     def cancel(self):
