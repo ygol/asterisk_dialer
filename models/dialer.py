@@ -103,25 +103,19 @@ class StasisThread(AriOdooSessionThread):
     1) On answer / playback / hangup events
     """
 
+    ext_event_handlers = []
+
+    def __init__(self, name, dialer):
+        super(StasisThread, self).__init__(name, dialer)
+        for event, handler in dialer.stasis_event_handlers:
+            self.ext_event_handlers.append([event, handler])
+
     def run(self):
 
         def user_event(channel, ev):
             if ev['eventname'] == 'exit_request':
                 # Immediate exit
                 self.ari_client.close()
-
-        def on_dtmf_received(channel, ev):
-            try:
-                if (self.dialer.create_lead_on_key_press and
-                        ev.get('digit') == '*'):
-                    _logger.debug(
-                        'DTMF * press on channel: %s' % channel.get(
-                            'channelId'))
-
-            except HTTPError, e:
-                # Just ignore errors
-                _logger.warn('DTMF RECEIVE ERROR: %s' % str(e))
-                _logger.error(format_exception())
 
         def stasis_start(channel, ev):
 
@@ -170,8 +164,13 @@ class StasisThread(AriOdooSessionThread):
                 self.ari_client.on_channel_event('StasisStart', stasis_start)
                 self.ari_client.on_channel_event('ChannelUserevent',
                                                  user_event)
-                self.ari_client.on_channel_event('ChannelDtmfReceived',
-                                                 on_dtmf_received)
+                # Add extension event handlers
+                dialer = self.dialer
+                for event, handler in self.ext_event_handlers:
+                    _logger.debug(
+                        'INSTALLING STASIS EVENT HANDLER FOR: %s' % event)
+                    self.ari_client.on_channel_event(event, handler)
+
                 self.ari_client.run(apps='dialer-%s-session-%s' % (
                     self.dialer.id,
                     self.session.id))
@@ -425,6 +424,10 @@ class dialer(models.Model):
     _description = 'Asterisk Dialer'
     _order = 'name'
 
+    stasis_thread = None
+    origination_thread = None
+    stasis_event_handlers = []
+
     name = fields.Char(required=True, string=_('Name'),
                        help='Dialer name, can be any string.')
     description = fields.Text(string=_('Description'))
@@ -586,6 +589,9 @@ class dialer(models.Model):
         session.state = 'running'
         # Reset channels
         self.channels.unlink()
+
+    def get_stasis_event_handlers(self):
+        return self.stasis_event_handlers
 
     @api.one
     def start(self):
