@@ -849,7 +849,7 @@ class phone_group(models.Model):
 
 class phone(models.Model):
     _name = 'asterisk.dialer.phone'
-    _order = 'name, phone'
+# Sorting like numbers are represented in .csv uploaded file    _order = 'name, phone'
 
     phone = fields.Char(string=_('Phone number'), required=True)
     name = fields.Char(string=_('Person name'))
